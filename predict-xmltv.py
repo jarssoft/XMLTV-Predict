@@ -1,27 +1,11 @@
 import sys
 import tester
+import genre
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
     current={}
-
-    categories={
-        '10':'Movie / Drama',
-        '17':'Movie - serious/classical/religious/historical movie/drama',
-        '20':'News / Current Affairs',
-        '31':'Show - game show/quiz/contest',
-        '30':'Show / Game Show',
-        '40':'Sports',
-        '45':'Sports - team sports (excluding football)',
-        '50':'Childrens / Youth',
-        '51':'Children - pre-school children\'s programmes',
-        '55':'Children - cartoons/puppets',
-        '60':'Music / Ballet / Dance',
-        '73':'Arts - religion',
-        '81':'Social - magazines/reports/documentary',
-        '91':'Education - nature/animals/environment',
-        'a0':'Leisure / Hobbies',
-    }
+    categories={}
 
     def predict(self):
         if self.element=="category":
@@ -39,7 +23,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
             return None
     
     def expose(self, content):
-        self.current[self.element]=content            
+        self.current[self.element]=content
+        if self.element=="category":      
+            self.categories[self.current['categoryn']]=content
     
 if(len(sys.argv)<2):
     print ("xmltv-predict.py tvxmlfile")
