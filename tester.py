@@ -5,33 +5,34 @@ class XMLTVHandler(xml.sax.ContentHandler):
 
     _data=0
     _element=""
-    lang=""
+    _lang=""
 
     def startDocument(self):
         pass
 
     def endDocument(self):
-        print("content: "+str(self._data)+" bytes.")
+        print("content: "+str(self._data)+" bytes.")        
         pass
 
     def startElement(self, name, attrs):
         self._element=name
         if "lang" in attrs :
             #print(attrs["lang"])
-            self.lang=attrs["lang"]
+            self._lang=attrs["lang"]
         if name=="programme":
             self.pureCharacters(attrs["channel"], "channel")
             self.pureCharacters(attrs["start"], "start")
             self.pureCharacters(attrs["stop"], "stop")            
 
     def endElement(self, name):
+        self._lang=""
         pass
 
     def ignorableWhitespace(self, whitespace):
         pass
        
     def pureCharacters(self, content, element):
-        prediction=self.predict(element)
+        prediction=self.predict(element, self._lang)
         
         print("element:    '"+element+"'")
         print("prediction: '"+str(prediction)+"'")
@@ -45,7 +46,7 @@ class XMLTVHandler(xml.sax.ContentHandler):
             else:
                 self._data+=0.125+len(content)
 
-        self.expose(element, content)
+        self.expose(element, content, self._lang)
 
     def characters(self, content):
         content=content.strip().replace("\n","")
