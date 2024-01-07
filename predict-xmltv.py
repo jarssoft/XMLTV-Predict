@@ -15,38 +15,43 @@ class XMLTVPredicter(tester.XMLTVHandler):
         return self.programs[self.current['title']]
 
     def predict(self, element, lang):
-        if element=="title" and lang!="fi":
-                if "title-"+lang in self.currentProgram():
-                    return self.currentProgram()["title-"+lang]
-                else:
-                    return self.current['title']
-        if element=="sub-title":
+        match element:
+
+            case "channel":
+                if "channel" in self.current:
+                    return self.current['channel']            
+            case "start":
+                if "stop" in self.current and not self.channelchange:
+                    return self.current['stop']
+            case "stop":
+                if "start" in self.current:
+                    loppuu=self.current['start']
+                    tunti=int(loppuu[8:10]) + 1
+                    if tunti<24:
+                        return loppuu[:8]+str(tunti).zfill(2)+"0000"+loppuu[14:]
+
+            case "title":
+                if lang!="fi":
+                    if "title-"+lang in self.currentProgram():
+                        return self.currentProgram()["title-"+lang]
+                    else:
+                        return self.current['title']
+            case "sub-title":
                 if "sub-title-"+lang in self.currentProgram():
                     return self.currentProgram()["sub-title-"+lang]
-        if element=="categoryn":
-            if("Uutiset" in self.current['title']):
-                return "20"
-            if("animaatiosarja" in self.current['sub-title']):
-                return "55"            
-        if element=="category":
-            if self.current['categoryn'] in self.categories:
-                return self.categories[self.current['categoryn']]
-            return 'Movie / Drama'
-        if element=="value":
-            for age in range(0,20):
-                if "("+str(age)+")" in self.current['title']:
-                    return str(age)
-        if element=="start":
-            if "stop" in self.current and not self.channelchange:
-                return self.current['stop']
-        if element=="stop":
-            if "start" in self.current:
-                loppuu=self.current['start']
-                tunti=int(loppuu[8:10]) + 1
-                if tunti<24:
-                    return loppuu[:8]+str(tunti).zfill(2)+"0000"+loppuu[14:]
-        if element=="channel" and "channel" in self.current:
-            return self.current['channel']
+            case "categoryn":
+                if("Uutiset" in self.current['title']):
+                    return "20"
+                if("animaatiosarja" in self.current['sub-title']):
+                    return "55"            
+            case "category":
+                if self.current['categoryn'] in self.categories:
+                    return self.categories[self.current['categoryn']]
+                return 'Movie / Drama'                
+            case "value":
+                for age in range(0,20):
+                    if "("+str(age)+")" in self.current['title']:
+                        return str(age)
 
         return None
     
