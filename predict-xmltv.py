@@ -9,6 +9,11 @@ class XMLTVPredicter(tester.XMLTVHandler):
     channelchange=True
 
     def predict(self, element, lang):
+        if element=="title" and lang!="fi":
+            if "title-"+lang in self.programs[self.current['title']]:
+                return self.programs[self.current['title']]["title-"+lang]
+            else:
+                return self.current['title']
         if element=="categoryn":
             if("Uutiset" in self.current['title']):
                 return "20"
@@ -41,6 +46,11 @@ class XMLTVPredicter(tester.XMLTVHandler):
             self.channelchange = "channel" not in self.current or self.current["channel"] != content
         if lang=="" or lang=="fi":
             self.current[element]=content
+            if content not in self.programs:
+                self.programs[content]={}
+        else:
+            if element=="title":
+                self.programs[self.current['title']]["title-"+lang] = content
         if element=="category":      
             self.categories[self.current['categoryn']]=content
     
