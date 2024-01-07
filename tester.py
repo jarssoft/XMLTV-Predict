@@ -3,19 +3,26 @@ import xml.sax
 
 class XMLTVHandler(xml.sax.ContentHandler):
 
-    data=0
-    element=""
+    _data=0
+    _element=""
+    lang=""
 
     def startDocument(self):
         pass
 
     def endDocument(self):
-        print("content: "+str(self.data)+" bytes.")
+        print("content: "+str(self._data)+" bytes.")
         pass
 
     def startElement(self, name, attrs):
-        self.element=name
-        pass
+        self._element=name
+        if "lang" in attrs :
+            #print(attrs["lang"])
+            self.lang=attrs["lang"]
+        if name=="programme":
+            self.pureCharacters(attrs["channel"], "channel")
+            self.pureCharacters(attrs["start"], "start")
+            self.pureCharacters(attrs["stop"], "stop")            
 
     def endElement(self, name):
         pass
@@ -23,27 +30,27 @@ class XMLTVHandler(xml.sax.ContentHandler):
     def ignorableWhitespace(self, whitespace):
         pass
        
-    def pureCharacters(self, content):
-        prediction=self.predict()
+    def pureCharacters(self, content, element):
+        prediction=self.predict(element)
         
-        print("element:    '"+self.element+"'")
+        print("element:    '"+element+"'")
         print("prediction: '"+str(prediction)+"'")
         print("real:       '"+content+"'")
         
         if(prediction==None):
-            self.data+=len(content)
+            self._data+=len(content)
         else:
             if(prediction==content):
-                self.data+=0.125
+                self._data+=0.125
             else:
-                self.data+=0.125+len(content)
-                
-        self.expose(content)
+                self._data+=0.125+len(content)
+
+        self.expose(element, content)
 
     def characters(self, content):
         content=content.strip().replace("\n","")
         if len(content)>0:
-            self.pureCharacters(content)
+            self.pureCharacters(content, self._element)
         
     def skippedEntity(self, name):
         pass

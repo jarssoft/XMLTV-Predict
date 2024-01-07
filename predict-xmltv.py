@@ -1,30 +1,29 @@
 import sys
 import tester
-import genre
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
     current={}
     categories={}
 
-    def predict(self):
-        if self.element=="category":
+    def predict(self, element):
+        if element=="category":
             if self.current['categoryn'] in self.categories:
                 return self.categories[self.current['categoryn']]
             if("Uutiset" in self.current['title']):
                 return 'News / Current Affairs'
             else:
                 return 'Movie / Drama'
-        if self.element=="value":
+        if element=="value":
             for age in range(0,20):
                 if "("+str(age)+")" in self.current['title']:
                     return str(age)
         else: 
             return None
     
-    def expose(self, content):
-        self.current[self.element]=content
-        if self.element=="category":      
+    def expose(self, element, content):
+        self.current[element]=content
+        if element=="category":      
             self.categories[self.current['categoryn']]=content
     
 if(len(sys.argv)<2):
