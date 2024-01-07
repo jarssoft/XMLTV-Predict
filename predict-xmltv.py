@@ -22,10 +22,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
         if element=="start":
             if "stop" in self.current and not self.channelchange:
                 return self.current['stop']
+        if element=="stop":
+            if "start" in self.current:
+                loppuu=self.current['start']
+                tunti=int(loppuu[8:10]) + 1
+                if tunti<24:
+                    return loppuu[:8]+str(tunti).zfill(2).zfill(2)+"0000"+loppuu[14:]
         if element=="channel" and "channel" in self.current:
             return self.current['channel']
 
-        
         return None
     
     def expose(self, element, content):
