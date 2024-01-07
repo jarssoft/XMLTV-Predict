@@ -14,6 +14,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 return self.programs[self.current['title']]["title-"+lang]
             else:
                 return self.current['title']
+        if element=="sub-title":
+            if "sub-title-"+lang in self.programs[self.current['title']]:
+                return self.programs[self.current['title']]["sub-title-"+lang]
         if element=="categoryn":
             if("Uutiset" in self.current['title']):
                 return "20"
@@ -51,7 +54,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
         else:
             if element=="title":
                 self.programs[self.current['title']]["title-"+lang] = content
-        if element=="category":      
+        if element=="sub-title":
+            self.programs[self.current['title']]["sub-title-"+lang] = content
+        if element=="category":
             self.categories[self.current['categoryn']]=content
     
 if(len(sys.argv)<2):
