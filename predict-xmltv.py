@@ -8,15 +8,21 @@ class XMLTVPredicter(tester.XMLTVHandler):
     programs={}
     channelchange=True
 
+    def currentProgramName(self):
+        return self.current['title']
+    
+    def currentProgram(self):
+        return self.programs[self.current['title']]
+
     def predict(self, element, lang):
         if element=="title" and lang!="fi":
-            if "title-"+lang in self.programs[self.current['title']]:
-                return self.programs[self.current['title']]["title-"+lang]
-            else:
-                return self.current['title']
+                if "title-"+lang in self.currentProgram():
+                    return self.currentProgram()["title-"+lang]
+                else:
+                    return self.current['title']
         if element=="sub-title":
-            if "sub-title-"+lang in self.programs[self.current['title']]:
-                return self.programs[self.current['title']]["sub-title-"+lang]
+                if "sub-title-"+lang in self.currentProgram():
+                    return self.currentProgram()["sub-title-"+lang]
         if element=="categoryn":
             if("Uutiset" in self.current['title']):
                 return "20"
@@ -49,13 +55,14 @@ class XMLTVPredicter(tester.XMLTVHandler):
             self.channelchange = "channel" not in self.current or self.current["channel"] != content
         if lang=="" or lang=="fi":
             self.current[element]=content
-            if content not in self.programs:
-                self.programs[content]={}
+            if element=="title":
+                if self.currentProgramName() not in self.programs:
+                    self.programs[self.currentProgramName()]={}
         else:
             if element=="title":
-                self.programs[self.current['title']]["title-"+lang] = content
+                    self.currentProgram()["title-"+lang] = content
         if element=="sub-title":
-            self.programs[self.current['title']]["sub-title-"+lang] = content
+                self.currentProgram()["sub-title-"+lang] = content
         if element=="category":
             self.categories[self.current['categoryn']]=content
     
@@ -64,4 +71,3 @@ if(len(sys.argv)<2):
     exit(0)
 
 tester.test(XMLTVPredicter(), open(sys.argv[1],"r"))
-

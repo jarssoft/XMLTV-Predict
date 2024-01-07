@@ -32,11 +32,12 @@ class XMLTVHandler(xml.sax.ContentHandler):
         pass
        
     def pureCharacters(self, content, element):
-        prediction=self.predict(element, self._lang)
-        
+
         print(element+" "+self._lang)
-        print("  prediction: '"+str(prediction)+"'")
-        print("  real:       '"+content+"'")
+        
+        prediction=self.predict(element, self._lang)    
+
+        print("  prediction: '"+str(prediction)+"'")        
         
         if(prediction==None):
             self._data+=len(content)
@@ -47,6 +48,7 @@ class XMLTVHandler(xml.sax.ContentHandler):
                 self._data+=0.125+len(content)
 
         self.expose(element, content, self._lang)
+        print("  real:       '"+content+"'")
 
     def characters(self, content):
         content=content.strip().replace("\n","")
