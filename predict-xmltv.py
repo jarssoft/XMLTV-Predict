@@ -5,6 +5,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
     current={}
     categories={}
+    channelchange=True
 
     def predict(self, element):
         if element=="category":
@@ -18,10 +19,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
             for age in range(0,20):
                 if "("+str(age)+")" in self.current['title']:
                     return str(age)
-        else: 
-            return None
+        if element=="start":
+            if "stop" in self.current and not self.channelchange:
+                return self.current['stop']
+        if element=="channel" and "channel" in self.current:
+            return self.current['channel']
+
+        
+        return None
     
     def expose(self, element, content):
+        if element=="channel":
+            self.channelchange = "channel" not in self.current or self.current["channel"] != content
         self.current[element]=content
         if element=="category":      
             self.categories[self.current['categoryn']]=content
