@@ -35,6 +35,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     if "title-"+lang in self.currentProgram():
                         return self.currentProgram()["title-"+lang]
                     else:
+                        if lang=="sv":
+                            return self.current['title'].replace("(S)","(T)")
                         return self.current['title']
             case "sub-title":
                 if "sub-title-"+lang in self.currentProgram():
