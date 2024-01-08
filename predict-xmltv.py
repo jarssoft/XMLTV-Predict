@@ -8,7 +8,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
     current={}
     categories={}
     programs={}
-    channelchange=True
     ohjelmapaikat={}
     
     def currentProgram(self):
@@ -24,7 +23,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "channel" in self.last:
                     return self.last['channel']            
             case "start":
-                if "stop" in self.last:# and not self.channelchange:
+                if "stop" in self.last:
                     return self.last['stop']
             case "stop":
                 if "start" in self.current:
@@ -43,7 +42,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         return self.current['title']
                 if self.currentPaikka() in self.ohjelmapaikat:
                     return self.ohjelmapaikat[self.currentPaikka()]
-                if "title" in self.last:# and not self.channelchange:
+                if "title" in self.last:
                     return self.last['title']
             case "sub-title":
                 if "sub-title-"+lang in self.currentProgram():
@@ -53,6 +52,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.currentProgram()["categoryn"]
                 if("Uutiset" in self.current['title']):
                     return "20"       
+                if "categoryn" in self.last:
+                    return self.last['categoryn']                
             case "category":
                 if self.current['categoryn'] in self.categories:
                     return self.categories[self.current['categoryn']]
@@ -67,7 +68,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def expose(self, element, content, lang):
 
         if element=="channel":
-            #self.channelchange = "channel" not in self.current or self.current["channel"] != content
             if "channel" not in self.current or self.current["channel"] != content:
                 if "channel" in self.current:
                     self.currentByChannel[self.current["channel"]]=self.current
