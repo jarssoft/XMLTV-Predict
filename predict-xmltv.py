@@ -9,9 +9,13 @@ class XMLTVPredicter(tester.XMLTVHandler):
     categories={}
     programs={}
     channelchange=True
+    ohjelmapaikat={}
     
     def currentProgram(self):
         return self.programs[self.current['title']]
+    
+    def currentPaikka(self):
+        return self.current["channel"]+":"+self.current["start"][8:12]
 
     def predict(self, element, lang):
         match element:
@@ -37,6 +41,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if lang=="sv":
                             return self.current['title'].replace("(S)","(T)")
                         return self.current['title']
+                if self.currentPaikka() in self.ohjelmapaikat:
+                    return self.ohjelmapaikat[self.currentPaikka()]
                 if "title" in self.last:# and not self.channelchange:
                     return self.last['title']
             case "sub-title":
@@ -77,8 +83,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if "title" not in self.current:
                 self.current["title"]=content
                 if content not in self.programs:
-                    self.programs[content]={}                    
-            self.currentProgram()["title-"+lang] = content
+                    self.programs[content]={}
+                self.ohjelmapaikat[self.currentPaikka()] = content
+            self.currentProgram()["title-"+lang] = content            
         else:
             self.current[element]=content
 
