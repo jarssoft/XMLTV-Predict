@@ -3,13 +3,12 @@ import tester
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
+    currentByChannel={}
+    last={}
     current={}
     categories={}
     programs={}
     channelchange=True
-
-    def currentProgramName(self):
-        return self.current['title']
     
     def currentProgram(self):
         return self.programs[self.current['title']]
@@ -18,11 +17,11 @@ class XMLTVPredicter(tester.XMLTVHandler):
         match element:
 
             case "channel":
-                if "channel" in self.current:
-                    return self.current['channel']            
+                if "channel" in self.last:
+                    return self.last['channel']            
             case "start":
-                if "stop" in self.current and not self.channelchange:
-                    return self.current['stop']
+                if "stop" in self.last:# and not self.channelchange:
+                    return self.last['stop']
             case "stop":
                 if "start" in self.current:
                     loppuu=self.current['start']
@@ -31,21 +30,23 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         return loppuu[:8]+str(tunti).zfill(2)+"0000"+loppuu[14:]
 
             case "title":
-                if lang!="fi":
+                if "title" in self.current:
                     if "title-"+lang in self.currentProgram():
                         return self.currentProgram()["title-"+lang]
                     else:
                         if lang=="sv":
                             return self.current['title'].replace("(S)","(T)")
                         return self.current['title']
+                if "title" in self.last:# and not self.channelchange:
+                    return self.last['title']
             case "sub-title":
                 if "sub-title-"+lang in self.currentProgram():
                     return self.currentProgram()["sub-title-"+lang]
             case "categoryn":
+                if "categoryn" in self.currentProgram():
+                    return self.currentProgram()["categoryn"]
                 if("Uutiset" in self.current['title']):
-                    return "20"
-                if("animaatiosarja" in self.current['sub-title']):
-                    return "55"            
+                    return "20"       
             case "category":
                 if self.current['categoryn'] in self.categories:
                     return self.categories[self.current['categoryn']]
@@ -58,18 +59,33 @@ class XMLTVPredicter(tester.XMLTVHandler):
         return None
     
     def expose(self, element, content, lang):
+
         if element=="channel":
-            self.channelchange = "channel" not in self.current or self.current["channel"] != content
-        if lang=="" or lang=="fi":
-            self.current[element]=content
-            if element=="title":
-                if self.currentProgramName() not in self.programs:
-                    self.programs[self.currentProgramName()]={}
+            #self.channelchange = "channel" not in self.current or self.current["channel"] != content
+            if "channel" not in self.current or self.current["channel"] != content:
+                if "channel" in self.current:
+                    self.currentByChannel[self.current["channel"]]=self.current
+                if content in self.currentByChannel:
+                    self.last=self.currentByChannel[content]
+                else:
+                    self.last={}
+            else:
+                self.last=self.current
+            self.current={}
+
+        if element=="title":
+            if "title" not in self.current:
+                self.current["title"]=content
+                if content not in self.programs:
+                    self.programs[content]={}                    
+            self.currentProgram()["title-"+lang] = content
         else:
-            if element=="title":
-                    self.currentProgram()["title-"+lang] = content
+            self.current[element]=content
+
         if element=="sub-title":
-                self.currentProgram()["sub-title-"+lang] = content
+            self.currentProgram()["sub-title-"+lang] = content
+        if element=="categoryn":
+            self.currentProgram()["categoryn"] = content
         if element=="category":
             self.categories[self.current['categoryn']]=content
     
