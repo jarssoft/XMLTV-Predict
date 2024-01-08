@@ -1,6 +1,13 @@
 import sys
 import tester
 
+
+def nextFullHour(datetime):
+    loppuu=datetime
+    tunti=int(loppuu[8:10]) + 1
+    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
+    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
+    
 class XMLTVPredicter(tester.XMLTVHandler):
 
     currentByChannel={}
@@ -27,10 +34,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.last['stop']
             case "stop":
                 if "start" in self.current:
-                    loppuu=self.current['start']
-                    tunti=int(loppuu[8:10]) + 1
-                    if tunti<24:
-                        return loppuu[:8]+str(tunti).zfill(2)+"0000"+loppuu[14:]
+                    return nextFullHour(self.current['start'])
 
             case "title":
                 if "title" in self.current:
@@ -51,12 +55,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "categoryn" in self.currentProgram():
                     return self.currentProgram()["categoryn"]
                 if("Uutiset" in self.current['title']):
-                    return "20"       
+                    return "20"
                 if "categoryn" in self.last:
-                    return self.last['categoryn']                
+                    return self.last['categoryn']
             case "category":
                 if self.current['categoryn'] in self.categories:
-                    return self.categories[self.current['categoryn']]
+                    return self.categories[self.current['categoryn']]              
                 return 'Movie / Drama'                
             case "value":
                 for age in range(0,20):
