@@ -1,7 +1,6 @@
 import sys
 import tester
 
-
 def nextFullHour(datetime):
     loppuu=datetime
     tunti=int(loppuu[8:10]) + 1
@@ -22,6 +21,21 @@ class XMLTVPredicter(tester.XMLTVHandler):
     
     def currentPaikka(self):
         return self.current["channel"]+":"+self.current["start"][8:12]
+    
+    def nearPaikka(self):
+        minute = int(self.current["start"][10:12])
+        
+        for addminute in [minute+0,  minute+5, minute-5]:
+            hour = int(self.current["start"][8:10])
+            if addminute>=60:
+                hour+=1
+            if addminute<0:
+                hour-=1
+            key = self.current["channel"] + ":" + str(hour).zfill(2) + str(addminute%60).zfill(2)
+            if key in self.ohjelmapaikat:
+                return key
+
+        return None
 
     def predict(self, element, lang):
         match element:
@@ -44,8 +58,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if lang=="sv":
                             return self.current['title'].replace("(S)","(T)")
                         return self.current['title']
-                if self.currentPaikka() in self.ohjelmapaikat:
-                    return self.ohjelmapaikat[self.currentPaikka()]
+                paikka = self.nearPaikka()
+                if paikka is not None:
+                    return self.ohjelmapaikat[paikka]
                 if "title" in self.last:
                     return self.last['title']
             case "sub-title":
