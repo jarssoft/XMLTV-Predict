@@ -25,7 +25,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def nearPaikka(self):
         minute = int(self.current["start"][10:12])
         
-        for addminute in [minute+0,  minute+5, minute-5]:
+        for addminute in [minute,  minute+5, minute-5]:
             hour = int(self.current["start"][8:10])
             if addminute>=60:
                 hour+=1
@@ -47,8 +47,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "stop" in self.last:
                     return self.last['stop']
             case "stop":
-                if "start" in self.current:
-                    return nextFullHour(self.current['start'])
+                return nextFullHour(self.current['start'])
 
             case "title":
                 if "title" in self.current:
@@ -86,37 +85,42 @@ class XMLTVPredicter(tester.XMLTVHandler):
     
     def expose(self, element, content, lang):
 
-        if element=="channel":
-            if "channel" not in self.current or self.current["channel"] != content:
-                if "channel" in self.current:
-                    self.currentByChannel[self.current["channel"]]=self.current
-                if content in self.currentByChannel:
-                    self.last=self.currentByChannel[content]
+        match element:
+            case "channel":
+                if "channel" not in self.current or self.current["channel"] != content:
+                    if "channel" in self.current:
+                        self.currentByChannel[self.current["channel"]]=self.current
+                    if content in self.currentByChannel:
+                        self.last=self.currentByChannel[content]
+                    else:
+                        self.last={}
                 else:
-                    self.last={}
-            else:
-                self.last=self.current
-            self.current={}
+                    self.last=self.current
+                self.current={element:content}
 
-        if element=="title":
-            if "title" not in self.current:
-                self.current["title"]=content
-                if content not in self.programs:
-                    self.programs[content]={}
-                self.ohjelmapaikat[self.currentPaikka()] = content
-            self.currentProgram()["title-"+lang] = content            
-        else:
-            self.current[element]=content
+            case w if w in ["start", "stop"]:
+                self.current[element]=content            
+        
+            case "title":
+                if "title" not in self.current:
+                    self.current["title"]=content
+                    if content not in self.programs:
+                        self.programs[content]={}
+                    self.ohjelmapaikat[self.currentPaikka()] = content
+                self.currentProgram()["title-"+lang] = content            
 
-        if element=="sub-title":
-            self.currentProgram()["sub-title-"+lang] = content
-        if element=="categoryn":
-            self.currentProgram()["categoryn"] = content
-        if element=="category":
-            self.categories[self.current['categoryn']]=content
+            case "sub-title":
+                self.currentProgram()["sub-title-"+lang] = content
+            case "categoryn":
+                self.currentProgram()["categoryn"] = content
+                self.current[element]=content
+            case "category":
+                self.categories[self.current['categoryn']]=content
     
 if(len(sys.argv)<2):
     print ("xmltv-predict.py tvxmlfile")
     exit(0)
 
-tester.test(XMLTVPredicter(), open(sys.argv[1],"r"))
+predicter = XMLTVPredicter()
+tester.test(predicter, open(sys.argv[1],"r"))
+#print(predicter.ohjelmapaikat)
