@@ -41,8 +41,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
         match element:
 
             case "channel":
-                if "channel" in self.last:
-                    return self.last['channel']            
+                if element in self.last:
+                    return self.last[element]            
             case "start":
                 if "stop" in self.last:
                     return self.last['stop']
@@ -50,28 +50,31 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 return nextFullHour(self.current['start'])
 
             case "title":
-                if "title" in self.current:
-                    if "title-"+lang in self.currentProgram():
-                        return self.currentProgram()["title-"+lang]
+                if element in self.current:
+                    if element+"-"+lang in self.currentProgram():
+                        return self.currentProgram()[element+"-"+lang]
                     else:
                         if lang=="sv":
-                            return self.current['title'].replace("(S)","(T)")
-                        return self.current['title']
+                            return self.current[element].replace("(S)","(T)")
+                        return self.current[element]
                 paikka = self.nearPaikka()
                 if paikka is not None:
                     return self.ohjelmapaikat[paikka]
-                if "title" in self.last:
-                    return self.last['title']
+                if element in self.last:                    
+                    if "after" in self.programs[self.last["title"]]:
+                        return self.programs[self.last["title"]]["after"]
+                if element in self.last:
+                    return self.last[element]
             case "sub-title":
-                if "sub-title-"+lang in self.currentProgram():
-                    return self.currentProgram()["sub-title-"+lang]
+                if element+"-"+lang in self.currentProgram():
+                    return self.currentProgram()[element+"-"+lang]
             case "categoryn":
-                if "categoryn" in self.currentProgram():
-                    return self.currentProgram()["categoryn"]
+                if element in self.currentProgram():
+                    return self.currentProgram()[element]
                 if("Uutiset" in self.current['title']):
                     return "20"
-                if "categoryn" in self.last:
-                    return self.last['categoryn']
+                if element in self.last:
+                    return self.last[element]
             case "category":
                 if self.current['categoryn'] in self.categories:
                     return self.categories[self.current['categoryn']]              
@@ -87,9 +90,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
         match element:
             case "channel":
-                if "channel" not in self.current or self.current["channel"] != content:
-                    if "channel" in self.current:
-                        self.currentByChannel[self.current["channel"]]=self.current
+                if element not in self.current or self.current[element] != content:
+                    if element in self.current:
+                        self.currentByChannel[self.current[element]]=self.current
                     if content in self.currentByChannel:
                         self.last=self.currentByChannel[content]
                     else:
@@ -102,17 +105,19 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.current[element]=content            
         
             case "title":
-                if "title" not in self.current:
-                    self.current["title"]=content
+                if element not in self.current:
+                    self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
                     self.ohjelmapaikat[self.currentPaikka()] = content
-                self.currentProgram()["title-"+lang] = content            
+                    if element in self.last:
+                        self.programs[self.last["title"]]["after"]=content
+                self.currentProgram()[element+"-"+lang] = content
 
             case "sub-title":
-                self.currentProgram()["sub-title-"+lang] = content
+                self.currentProgram()[element+"-"+lang] = content
             case "categoryn":
-                self.currentProgram()["categoryn"] = content
+                self.currentProgram()[element] = content
                 self.current[element]=content
             case "category":
                 self.categories[self.current['categoryn']]=content
