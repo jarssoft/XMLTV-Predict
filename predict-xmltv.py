@@ -102,8 +102,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.currentProgram()[element]
                 if("Uutiset" in self.current['title']):
                     return "20"
-                if element in self.last:
-                    return self.last[element]
             case "category":
                 if self.current['categoryn'] in self.categories:
                     return self.categories[self.current['categoryn']]              
