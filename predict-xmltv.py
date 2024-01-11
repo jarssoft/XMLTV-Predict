@@ -1,6 +1,25 @@
 import sys
 import tester
 
+def minute(time):
+    return int(time[10:12])
+
+def hour(time):
+    return int(time[8:10])
+
+def nextFullHour(datetime):
+    loppuu=datetime
+    tunti=hour(loppuu) + 1
+    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
+    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
+
+def timeDistance(start, stop):
+    return (hour(stop) - hour(start)) * 60 + (minute(stop) - minute(start))
+
+def addMinuts(time, delta):
+    minuts = hour(time) * 60 + minute(time) + delta
+    return time[:8] + str(int(minuts/60)).zfill(2) + str(minuts%60).zfill(2) + time[12:]
+
 def nextFullHour(datetime):
     loppuu=datetime
     tunti=int(loppuu[8:10]) + 1
@@ -47,8 +66,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "stop" in self.last:
                     return self.last['stop']
             case "stop":
-                return nextFullHour(self.current['start'])
-
+                start = self.current['start']
+                paikka = self.nearPaikka()
+                assume=None
+                if paikka is not None:
+                    assume = self.ohjelmapaikat[paikka]                
+                if element in self.last:
+                    if "after" in self.programs[self.last["title"]]:
+                        assume = self.programs[self.last["title"]]["after"]                
+                if assume is not None:
+                    if assume in self.programs and "duration" in self.programs[assume]:
+                        return addMinuts(start, self.programs[assume]["duration"])
+                return nextFullHour(start)
             case "title":
                 if element in self.current:
                     if element+"-"+lang in self.currentProgram():
@@ -109,6 +138,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
+                        self.programs[content]["duration"] = timeDistance(self.current["start"], self.current["stop"]) 
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
