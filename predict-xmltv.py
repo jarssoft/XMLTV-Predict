@@ -44,7 +44,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def nearPaikka(self):
         minute = int(self.current["start"][10:12])
         
-        for addminute in [minute,  minute+5, minute-5]:
+        for addminute in (minute,  minute+5, minute-5):
             hour = int(self.current["start"][8:10])
             if addminute>=60:
                 hour+=1
@@ -136,7 +136,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
-                        self.programs[content]["duration"] = timeDistance(self.current["start"], self.current["stop"]) 
+                        duration = timeDistance(self.current["start"], self.current["stop"]) 
+                        if duration>0:
+                            self.programs[content]["duration"] =duration
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
