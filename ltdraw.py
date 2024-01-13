@@ -31,12 +31,21 @@ def drawBackGround(context):
         addAxis(context, y*60, str(y%24))
 
 
-def addProgram(context, wd, start, stop, text):
+def addProgram(context, wd, start, stop, text, correct):
+    if start>stop:
+        return
+    if wd<0 or wd>6:
+        return
     start-=6*60
     stop-=6*60
     pat = cairo.LinearGradient(0.0, 0.0, 0.0, 1.0)
-    pat.add_color_stop_rgba(1, 0.7, 0.7, 0, 1)  # First stop, 50% opacity
-    pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
+    if correct:
+        pat.add_color_stop_rgba(1, 0.7, 0.7, 0.7, 1)  # First stop, 50% opacity
+        pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
+    else:
+        pat.add_color_stop_rgba(1, 0.7, 0.7, 0.0, 1)  # First stop, 50% opacity
+        pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
+
     context.rectangle(wd*100+margin, getY(start), 95, getY(stop-start-1)) 
     context.set_source(pat)
     context.fill()

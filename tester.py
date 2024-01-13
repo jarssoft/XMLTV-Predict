@@ -31,6 +31,8 @@ class XMLTVHandler(xml.sax.ContentHandler):
     def ignorableWhitespace(self, whitespace):
         pass
        
+    #def quest(self, predict):
+
     def pureCharacters(self, content, element):
 
         print(element+" "+self._lang)
@@ -39,15 +41,17 @@ class XMLTVHandler(xml.sax.ContentHandler):
 
         print("  prediction: '"+str(prediction)+"'")        
         
+        correct=False
         if(prediction==None):
             self._data+=len(content)
         else:
             if(prediction==content):
                 self._data+=0.125
+                correct=True
             else:
                 self._data+=0.125+len(content)
 
-        self.expose(element, content, self._lang)
+        self.expose(element, content, self._lang, correct)
         print("  real:       '"+content+"'")
 
     def characters(self, content):

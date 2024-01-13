@@ -1,25 +1,25 @@
-import drawlongterm
+import ltdraw
 import cairo 
 
 # creating a SVG surface 
 # here geek is file name & 700, 700 is dimension 
-with cairo.SVGSurface("geek.svg", 700+drawlongterm.margin, 700) as surface: 
+with cairo.SVGSurface("geek.svg", 700+ltdraw.margin, 700) as surface: 
   
     # creating a cairo context object 
     context = cairo.Context(surface) 
 
-    drawlongterm.drawBackGround(context)
+    ltdraw.drawBackGround(context)
 
     # creating a rectangle(square) for left eye 
-    drawlongterm.addProgram(context, 4, 20*60+00, 20*60+29, "Rahusen punatäh.")
-    drawlongterm.addProgram(context, 4, 20*60+29, 20*60+51, "Yle Uutiset")
-    drawlongterm.addProgram(context, 4, 20*60+51, 21*60+00, "Urheiluruutu")
-    drawlongterm.addProgram(context, 4, 21*60+00, 22*60+00, "Presidentinvaalit")
+    ltdraw.addProgram(context, 4, 20*60+00, 20*60+29, "Rahusen punatäh.")
+    ltdraw.addProgram(context, 4, 20*60+29, 20*60+51, "Yle Uutiset")
+    ltdraw.addProgram(context, 4, 20*60+51, 21*60+00, "Urheiluruutu")
+    ltdraw.addProgram(context, 4, 21*60+00, 22*60+00, "Presidentinvaalit")
     
-    drawlongterm.addProgram(context, 5, 19*60+45, 20*60+29, "Midsomer Murders")
-    drawlongterm.addProgram(context, 5, 20*60+29, 20*60+45, "Yle Uutiset")
-    drawlongterm.addProgram(context, 5, 20*60+45, 21*60+00, "Urheiluruutu")
-    drawlongterm.addProgram(context, 5, 21*60+00, 22*60+15, "Hengaillaan")
+    ltdraw.addProgram(context, 5, 19*60+45, 20*60+29, "Midsomer Murders")
+    ltdraw.addProgram(context, 5, 20*60+29, 20*60+45, "Yle Uutiset")
+    ltdraw.addProgram(context, 5, 20*60+45, 21*60+00, "Urheiluruutu")
+    ltdraw.addProgram(context, 5, 21*60+00, 22*60+15, "Hengaillaan")
 
 
     context.scale(700, 700)  

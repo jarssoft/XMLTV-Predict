@@ -1,30 +1,25 @@
 import sys
 import tester
+import ltlib
+import xmltvtime
 
-def minute(time):
-    return int(time[10:12])
-
-def hour(time):
-    return int(time[8:10])
-
-def nextFullHour(datetime):
-    loppuu=datetime
-    tunti=hour(loppuu) + 1
-    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
-    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
+#def nextFullHour(datetime):
+#    loppuu=datetime
+#    tunti=xmltvtime.hour(loppuu) + 1
+#    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
+#    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
 
 def timeDistance(start, stop):
-    return (hour(stop) - hour(start)) * 60 + (minute(stop) - minute(start))
+    return (xmltvtime.hour(stop) - xmltvtime.hour(start)) * 60 + (xmltvtime.minute(stop) - xmltvtime.minute(start))
 
 def addMinuts(time, delta):
-    minuts = hour(time) * 60 + minute(time) + delta
+    minuts = xmltvtime.hour(time) * 60 + xmltvtime.minute(time) + delta
     return time[:8] + str(int(minuts/60)).zfill(2) + str(minuts%60).zfill(2) + time[12:]
 
 def nextFullHour(datetime):
-    loppuu=datetime
-    tunti=int(loppuu[8:10]) + 1
-    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
-    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
+    tunti=xmltvtime.hour(datetime) + 1
+    paiva=int(datetime[6:8]) + (1 if tunti>23 else 0)
+    return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
     
 class XMLTVPredicter(tester.XMLTVHandler):
 
@@ -113,7 +108,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
         return None
     
-    def expose(self, element, content, lang):
+    def expose(self, element, content, lang, correct):
 
         match element:
             case "channel":
@@ -142,6 +137,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
+                    if "tv1" in self.current["channel"]:# and not correct:
+                        lt.addProgram(self.current["start"], self.current["stop"], content, "Yle Uutis" in content)
                 self.currentProgram()[element+"-"+lang] = content
 
             case "sub-title":
@@ -152,10 +149,14 @@ class XMLTVPredicter(tester.XMLTVHandler):
             case "category":
                 self.categories[self.current['categoryn']]=content
     
-if(len(sys.argv)<2):
-    print ("xmltv-predict.py tvxmlfile")
-    exit(0)
+#if(len(sys.argv)<2):
+#    print ("xmltv-predict.py tvxmlfile")
+#    exit(0)
 
+lt = ltlib.LongTerm("out.svg")
 predicter = XMLTVPredicter()
-tester.test(predicter, open(sys.argv[1],"r"))
+#file=sys.argv[1]
+file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
+tester.test(predicter, open(file,"r"))
 #print(predicter.ohjelmapaikat)
+lt.save()

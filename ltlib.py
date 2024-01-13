@@ -1,14 +1,19 @@
-import drawlongterm
+import ltdraw
 import cairo 
+import xmltvtime
 
 class LongTerm:
   def __init__(self, filename):
     self.surface = cairo.SVGSurface(filename, 740, 700)
     self.context = cairo.Context(self.surface)
-    drawlongterm.drawBackGround(self.context)
+    ltdraw.drawBackGround(self.context)
 
-  def addProgram(self, weekday, start, stop, title):
-    drawlongterm.addProgram(self.context, weekday, start, stop, title)
+  def addProgram(self, start, stop, title, correct):
+    minstart=xmltvtime.hour(start)*60+xmltvtime.minute(start)
+    minstop=xmltvtime.hour(stop)*60+xmltvtime.minute(stop)
+    day=xmltvtime.day(start)-21
+    print(minstart, minstop)
+    ltdraw.addProgram(self.context, day, minstart, minstop, title, correct)
 
   def save(self):
     self.context.save()
@@ -17,13 +22,14 @@ class LongTerm:
     self.context.show_page()
     self.surface.finish()
 
+"""
 lt = LongTerm("out.svg")
-lt.addProgram(4, 20*60+00, 20*60+29, "Rahusen punatäh.")
-lt.addProgram(4, 20*60+29, 20*60+51, "Yle Uutiset")
-lt.addProgram(4, 20*60+51, 21*60+00, "Urheiluruutu")
-lt.addProgram(4, 21*60+00, 22*60+00, "Presidentinvaalit")
-lt.addProgram(5, 19*60+45, 20*60+29, "Midsomer Murders")
-lt.addProgram(5, 20*60+29, 20*60+45, "Yle Uutiset")
-lt.addProgram(5, 20*60+45, 21*60+00, "Urheiluruutu")
-lt.addProgram(5, 21*60+00, 22*60+15, "Hengaillaan")
-lt.save()
+lt.addProgram("20040112200000", "20040112202900", "Rahusen punatäh.")
+lt.addProgram("20040112202900", "20040112205100", "Yle Uutiset")
+lt.addProgram("20040112205100", "20040112210000", "Urheiluruutu")
+lt.addProgram("20040112210000", "20040112220000", "Presidentinvaalit")
+lt.addProgram("20040113194500", "20040113202900", "Midsomer Murders")
+lt.addProgram("20040113202900", "20040113204500", "Yle Uutiset")
+lt.addProgram("20040113204500", "20040113210000", "Urheiluruutu")
+lt.addProgram("20040113210000", "20040113221500", "Hengaillaan")
+lt.save()"""
