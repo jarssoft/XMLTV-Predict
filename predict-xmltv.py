@@ -69,13 +69,13 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if paikka is not None:
                     assume=self.ohjelmapaikat[paikka]
                     duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
-                    if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<20:
+                    if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<=15:
                         return assume
                 if element in self.last:                    
                     if "after" in self.programs[self.last["title"]]:
                         assume = self.programs[self.last["title"]]["after"]
                         duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
-                        if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<20:
+                        if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<=15:
                             return assume
                 if element in self.last:
                     return self.last[element]
@@ -87,6 +87,14 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.currentProgram()[element]
                 if("Uutiset" in self.current['title']):
                     return "20"
+                if("Elokuva:" in self.current['title'] or "Subleffa:" in self.current['title']):
+                    return "10"                
+                if 'sub-title' in self.current and "draama" in self.current['sub-title']:
+                    return "10"                                
+                if 'sub-title' in self.current and "reality" in self.current['sub-title']:
+                    return "30"                                
+                if 'sub-title' in self.current and "Kausi" in self.current['sub-title']:
+                    return "10"                                
             case "category":
                 if self.current['categoryn'] in self.categories:
                     return self.categories[self.current['categoryn']]              
@@ -128,15 +136,16 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
-                    if "tv1" in self.current["channel"]:# and not correct:
-                        lt.addProgram(self.current["start"], self.current["stop"], content, "Yle Uutis" in content)
                 self.currentProgram()[element+"-"+lang] = content
 
             case "sub-title":
                 self.currentProgram()[element+"-"+lang] = content
+                self.current[element]=content
             case "categoryn":
                 self.currentProgram()[element] = content
                 self.current[element]=content
+                if "tv1" in self.current["channel"]:# and not correct:
+                    lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)                      
             case "category":
                 self.categories[self.current['categoryn']]=content
     
