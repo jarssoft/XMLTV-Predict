@@ -1,24 +1,11 @@
-import sys
+#import sys
 import tester
 import ltlib
 import xmltvtime
 
-#def nextFullHour(datetime):
-#    loppuu=datetime
-#    tunti=xmltvtime.hour(loppuu) + 1
-#    paiva=int(loppuu[6:8]) + (1 if tunti>23 else 0)
-#    return loppuu[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+loppuu[14:]
-
-def timeDistance(start, stop):
-    return (xmltvtime.hour(stop) - xmltvtime.hour(start)) * 60 + (xmltvtime.minute(stop) - xmltvtime.minute(start))
-
-def addMinuts(time, delta):
-    minuts = xmltvtime.hour(time) * 60 + xmltvtime.minute(time) + delta
-    return time[:8] + str(int(minuts/60)).zfill(2) + str(minuts%60).zfill(2) + time[12:]
-
 def nextFullHour(datetime):
     tunti=xmltvtime.hour(datetime) + 1
-    paiva=int(datetime[6:8]) + (1 if tunti>23 else 0)
+    paiva=xmltvtime.day(datetime) + (1 if tunti>23 else 0)
     return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
     
 class XMLTVPredicter(tester.XMLTVHandler):
@@ -68,7 +55,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         assume = self.programs[self.last["title"]]["after"]                
                 if assume is not None:
                     if assume in self.programs and "duration" in self.programs[assume]:
-                        return addMinuts(start, self.programs[assume]["duration"])
+                        return xmltvtime.addMinuts(start, self.programs[assume]["duration"])
                 return nextFullHour(start)
             case "title":
                 if element in self.current:
@@ -128,7 +115,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
-                        duration = timeDistance(self.current["start"], self.current["stop"]) 
+                        duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"]) 
                         if duration>0:
                             self.programs[content]["duration"] =duration
                     #if xmltvtime.day(self.current["start"]) not in (19, 20, 25, 26, 27): #Ei viikonloppua
