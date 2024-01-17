@@ -65,12 +65,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if lang=="sv":
                             return self.current[element].replace("(S)","(T)")
                         return self.current[element]
-                paikka = self.nearPaikka()
+                paikka = self.nearPaikka()                
                 if paikka is not None:
-                    return self.ohjelmapaikat[paikka]
+                    assume=self.ohjelmapaikat[paikka]
+                    duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
+                    if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<20:
+                        return assume
                 if element in self.last:                    
                     if "after" in self.programs[self.last["title"]]:
-                        return self.programs[self.last["title"]]["after"]
+                        assume = self.programs[self.last["title"]]["after"]
+                        duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
+                        if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<20:
+                            return assume
                 if element in self.last:
                     return self.last[element]
             case "sub-title":
