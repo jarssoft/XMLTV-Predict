@@ -34,21 +34,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
         return self.programs[self.current['title']]
     
     def currentPaikka(self):
-        return self.current["channel"]+":"+self.current["start"][8:12]
+        daytime = xmltvtime.dayTime(self.current["start"])
+        daytype = xmltvtime.dayType(self.current["start"])
+        return self.current["channel"]+":"+daytype+":"+str(daytime).zfill(4)
     
     def nearPaikka(self):
-        minute = int(self.current["start"][10:12])
-        
-        for addminute in (minute,  minute+5, minute-5):
-            hour = int(self.current["start"][8:10])
-            if addminute>=60:
-                hour+=1
-            if addminute<0:
-                hour-=1
-            key = self.current["channel"] + ":" + str(hour).zfill(2) + str(addminute%60).zfill(2)
+        daytime = xmltvtime.dayTime(self.current["start"])
+        daytype = xmltvtime.dayType(self.current["start"])
+        prefix = self.current["channel"] + ":" + daytype + ":"
+        for addminute in (0, 5, -5):            
+            key = prefix + str(daytime+addminute).zfill(4)
             if key in self.ohjelmapaikat:
                 return key
-
         return None
 
     def predict(self, element, lang):
@@ -134,6 +131,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         duration = timeDistance(self.current["start"], self.current["stop"]) 
                         if duration>0:
                             self.programs[content]["duration"] =duration
+                    #if xmltvtime.day(self.current["start"]) not in (19, 20, 25, 26, 27): #Ei viikonloppua
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
