@@ -66,15 +66,14 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             return self.current[element].replace("(S)","(T)")
                         return self.current[element]
                 paikka = self.nearPaikka()                
+                duration = self.current["duration"]
                 if paikka is not None:
-                    assume=self.ohjelmapaikat[paikka]
-                    duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
+                    assume=self.ohjelmapaikat[paikka]                    
                     if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<=15:
                         return assume
                 if element in self.last:                    
                     if "after" in self.programs[self.last["title"]]:
                         assume = self.programs[self.last["title"]]["after"]
-                        duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"])
                         if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-duration)<=15:
                             return assume
                 if element in self.last:
@@ -121,15 +120,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.last=self.current
                 self.current={element:content}
 
-            case w if w in ["start", "stop"]:
+            case "start":
                 self.current[element]=content            
-        
+
+            case "stop":
+                self.current[element]=content
+                self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content) 
             case "title":
                 if element not in self.current:
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
-                        duration = xmltvtime.timeDistance(self.current["start"], self.current["stop"]) 
+                        duration = self.current["duration"]
                         if duration>0:
                             self.programs[content]["duration"] =duration
                     #if xmltvtime.day(self.current["start"]) not in (19, 20, 25, 26, 27): #Ei viikonloppua
