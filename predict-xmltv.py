@@ -121,19 +121,25 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.current={element:content}
 
             case "start":
-                self.current[element]=content            
+                self.current[element]=content
 
             case "stop":
                 self.current[element]=content
-                self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content) 
+                self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content)
                 assert self.current["duration"]>=0
             case "title":
                 if element not in self.current:
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
+                        if ":" in content or " (" in content:
+                            uppertitle=content.split(":")[0].split(" (")[0]
+                            for key in self.programs:
+                                if uppertitle in key:
+                                    if "categoryn" in self.programs[key]:
+                                        self.programs[content]["categoryn"]=self.programs[key]["categoryn"]
+                                    break
                         self.programs[content]["duration"] = self.current["duration"]
-                    #if xmltvtime.day(self.current["start"]) not in (19, 20, 25, 26, 27): #Ei viikonloppua
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
                         self.programs[self.last["title"]]["after"]=content
@@ -146,7 +152,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.currentProgram()[element] = content
                 self.current[element]=content
                 if "tv1" in self.current["channel"]:# and not correct:
-                    lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)                      
+                    lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
             case "category":
                 self.categories[self.current['categoryn']]=content
     
