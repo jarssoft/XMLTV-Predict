@@ -11,6 +11,9 @@ def day(time):
 def dayTime(time):
     return hour(time) * 60 + minute(time)
 
+def totalTime(time):
+    return (day(time) * 24 + hour(time)) * 60 + minute(time)
+
 def dayType(time):
     if(hour(time)>5):
         return "viikonloppu" if day(time) in (19, 20, 26, 27) else "arki" 
@@ -18,7 +21,7 @@ def dayType(time):
         return "viikonloppu" if day(time) in (20, 21, 27, 28) else "arki"
     
 def timeDistance(start, stop):
-    return dayTime(stop) - dayTime(start)
+    return totalTime(stop) - totalTime(start)
 
 def addMinuts(time, delta):
     minuts = dayTime(time) + delta
