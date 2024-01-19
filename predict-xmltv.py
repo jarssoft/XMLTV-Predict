@@ -9,7 +9,17 @@ def nextFullHour(datetime):
     return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
 
 def removeDuplicates(channel):
-    return channel.replace("1549.dvb.guide", "mtv3.fi").replace("1501.dvb.guide", "tv1.yle.fi").replace("1502.dvb.guide", "tv2.yle.fi").replace("1503.dvb.guide", "fem.yle.fi")
+    convert={
+        "1549.dvb.guide": "mtv3.fi",
+        "1501.dvb.guide": "tv1.yle.fi",
+        "1502.dvb.guide": "tv2.yle.fi",
+        "1503.dvb.guide": "fem.yle.fi"
+    }
+
+    if channel in convert:
+        return convert[channel]
+    else:
+        return channel
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
@@ -142,6 +152,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.current[element]=content
                 self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content)
                 assert self.current["duration"]>=0
+
             case "title":
                 if element not in self.current:
                     self.current[element]=content
@@ -167,11 +178,13 @@ class XMLTVPredicter(tester.XMLTVHandler):
             case "sub-title":
                 self.currentProgram()[element+"-"+lang] = content
                 self.current[element+"-"+lang]=content
+
             case "categoryn":
                 self.currentProgram()[element] = content
                 self.current[element]=content
                 if "tv1" in self.current["channel"]:# and not correct:
                     lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
+                    
             case "category":
                 self.categories[self.current['categoryn']]=content
     
