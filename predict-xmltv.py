@@ -7,7 +7,10 @@ def nextFullHour(datetime):
     tunti=xmltvtime.hour(datetime) + 1
     paiva=xmltvtime.day(datetime) + (1 if tunti>23 else 0)
     return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
-    
+
+def removeDuplicates(channel):
+    return channel.replace("1549.dvb.guide", "mtv3.fi").replace("1501.dvb.guide", "tv1.yle.fi").replace("1502.dvb.guide", "tv2.yle.fi")
+
 class XMLTVPredicter(tester.XMLTVHandler):
 
     currentByChannel={}
@@ -23,12 +26,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def currentPaikka(self):
         daytime = xmltvtime.dayTime(self.current["start"])
         daytype = xmltvtime.dayType(self.current["start"])
-        return self.current["channel"]+":"+daytype+":"+str(daytime).zfill(4)
+        return removeDuplicates(self.current["channel"])+":"+daytype+":"+str(daytime).zfill(4)
     
     def nearPaikka(self):
         daytime = xmltvtime.dayTime(self.current["start"])
         daytype = xmltvtime.dayType(self.current["start"])
-        prefix = self.current["channel"] + ":" + daytype + ":"
+        prefix = removeDuplicates(self.current["channel"]) + ":" + daytype + ":"
         for addminute in (0, 5, -5):            
             key = prefix + str(daytime+addminute).zfill(4)
             if key in self.ohjelmapaikat:
