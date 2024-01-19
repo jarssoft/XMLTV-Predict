@@ -4,6 +4,7 @@ import xml.sax
 class XMLTVHandler(xml.sax.ContentHandler):
 
     _data=0
+    _datat={}
     _element=""
     _lang=""
 
@@ -11,7 +12,8 @@ class XMLTVHandler(xml.sax.ContentHandler):
         pass
 
     def endDocument(self):
-        print("content: "+str(self._data)+" bytes.")        
+        print("content: "+str(self._datat)+" bytes.")        
+        print("content: "+str(self._data)+" bytes.")
         pass
 
     def startElement(self, name, attrs):
@@ -43,13 +45,18 @@ class XMLTVHandler(xml.sax.ContentHandler):
         
         correct=False
         if(prediction==None):
-            self._data+=len(content)
+            newdata=len(content)
         else:
             if(prediction==content):
-                self._data+=0.125
+                newdata=0.125
                 correct=True
             else:
-                self._data+=0.125+len(content)
+                newdata=0.125+len(content)
+
+        self._data+=newdata
+        if(element not in self._datat):
+            self._datat[element]=0
+        self._datat[element]+=newdata
 
         self.expose(element, content, self._lang, correct)
         print("  real:       '"+content+"'")
