@@ -138,6 +138,10 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                 if uppertitle in key:
                                     if "categoryn" in self.programs[key]:
                                         self.programs[content]["categoryn"]=self.programs[key]["categoryn"]
+                                    if "sub-title-fi" in self.programs[key]:
+                                        self.programs[content]["sub-title-fi"]=self.programs[key]["sub-title-fi"]
+                                    if "sub-title-sv" in self.programs[key]:
+                                        self.programs[content]["sub-title-sv"]=self.programs[key]["sub-title-sv"]                                        
                                     break
                         self.programs[content]["duration"] = self.current["duration"]
                     self.ohjelmapaikat[self.currentPaikka()] = content
