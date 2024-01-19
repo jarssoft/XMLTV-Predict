@@ -9,7 +9,7 @@ def nextFullHour(datetime):
     return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
 
 def removeDuplicates(channel):
-    return channel.replace("1549.dvb.guide", "mtv3.fi").replace("1501.dvb.guide", "tv1.yle.fi").replace("1502.dvb.guide", "tv2.yle.fi")
+    return channel.replace("1549.dvb.guide", "mtv3.fi").replace("1501.dvb.guide", "tv1.yle.fi").replace("1502.dvb.guide", "tv2.yle.fi").replace("1503.dvb.guide", "fem.yle.fi")
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
@@ -19,6 +19,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     categories={}
     programs={}
     ohjelmapaikat={}
+    rinnakkaisohjelmat={}
     
     def currentProgram(self):
         return self.programs[self.current['title']]
@@ -48,6 +49,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "stop" in self.last:
                     return self.last['stop']
             case "stop":
+                if element in self.current:
+                    return self.current[element]
                 start = self.current['start']
                 paikka = self.nearPaikka()
                 assume=None
@@ -82,9 +85,13 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if element in self.last:
                     return self.last[element]
             case "sub-title":
+                if element+"-"+lang in self.current:
+                    return self.current[element+"-"+lang]
                 if element+"-"+lang in self.currentProgram():
                     return self.currentProgram()[element+"-"+lang]
             case "categoryn":
+                if element in self.current:
+                    return self.current[element]
                 if element in self.currentProgram():
                     return self.currentProgram()[element]
                 if("Uutiset" in self.current['title']):
@@ -121,10 +128,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.last={}
                 else:
                     self.last=self.current
+                    if removeDuplicates(self.current["channel"]) in ("mtv3.fi","tv1.yle.fi", "tv2.yle.fi"):
+                        self.rinnakkaisohjelmat[removeDuplicates(self.current["channel"])+":"+self.current["start"]] = self.current
                 self.current={element:content}
 
             case "start":
                 self.current[element]=content
+                if removeDuplicates(self.current["channel"]) in ("mtv3.fi","tv1.yle.fi", "tv2.yle.fi"):
+                    if removeDuplicates(self.current["channel"])+":"+self.current["start"] in self.rinnakkaisohjelmat:
+                        self.current = self.rinnakkaisohjelmat[removeDuplicates(self.current["channel"])+":"+self.current["start"]]
 
             case "stop":
                 self.current[element]=content
@@ -154,7 +166,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
             case "sub-title":
                 self.currentProgram()[element+"-"+lang] = content
-                self.current[element]=content
+                self.current[element+"-"+lang]=content
             case "categoryn":
                 self.currentProgram()[element] = content
                 self.current[element]=content
