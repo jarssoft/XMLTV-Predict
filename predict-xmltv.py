@@ -79,7 +79,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         return self.currentProgram()[element+"-"+lang]
                     else:
                         if lang=="sv":
+                            if element+"-no" in self.currentProgram():
+                                return self.currentProgram()[element+"-no"]
                             return self.current[element].replace("(S)","(T)")
+                        if lang=="no":
+                            if element+"-da" in self.currentProgram():
+                                return self.currentProgram()[element+"-da"]
                         return self.current[element]
                 paikka = self.nearPaikka()                
                 currentDuration = self.current["duration"]
@@ -99,6 +104,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.current[element+"-"+lang]
                 if element+"-"+lang in self.currentProgram():
                     return self.currentProgram()[element+"-"+lang]
+                if lang=="sv":
+                    if element+"-no" in self.currentProgram():
+                        return self.currentProgram()[element+"-no"]
+                if lang=="no":
+                    if element+"-da" in self.currentProgram():
+                        return self.currentProgram()[element+"-da"]
             case "categoryn":
                 if element in self.current:
                     return self.current[element]
@@ -184,7 +195,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.current[element]=content
                 if "tv1" in self.current["channel"]:# and not correct:
                     lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
-                    
+
             case "category":
                 self.categories[self.current['categoryn']]=content
     
