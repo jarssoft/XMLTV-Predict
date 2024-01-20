@@ -40,7 +40,8 @@ class XMLTVHandler(xml.sax.ContentHandler):
 
     def pureCharacters(self, content, element):
 
-        print(element+" "+self._lang)
+        wholeElement=element+" "+self._lang
+        print(wholeElement)
         
         prediction=self.predict(element, self._lang)    
 
@@ -57,9 +58,9 @@ class XMLTVHandler(xml.sax.ContentHandler):
                 newdata=0.125+len(content)
 
         self._data+=newdata
-        if(element not in self._datat):
-            self._datat[element]=0
-        self._datat[element]+=newdata
+        if(wholeElement not in self._datat):
+            self._datat[wholeElement]=0
+        self._datat[wholeElement]+=newdata
 
         self.expose(element, content, self._lang, correct)
         print("  real:       '"+content+"'")
