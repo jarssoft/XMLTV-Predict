@@ -7,6 +7,7 @@ class XMLTVHandler(xml.sax.ContentHandler):
     _datat={}
     _element=""
     _lang=""
+    _content=""
 
     def startDocument(self):
         pass
@@ -26,9 +27,11 @@ class XMLTVHandler(xml.sax.ContentHandler):
             self.pureCharacters(attrs["start"], "start")
             self.pureCharacters(attrs["stop"], "stop")            
 
-    def endElement(self, name):
+    def endElement(self, name):        
+        if len(self._content)>0:
+            self.pureCharacters(self._content, self._element)
+        self._content=""
         self._lang=""
-        pass
 
     def ignorableWhitespace(self, whitespace):
         pass
@@ -62,9 +65,8 @@ class XMLTVHandler(xml.sax.ContentHandler):
         print("  real:       '"+content+"'")
 
     def characters(self, content):
-        content=content.strip().replace("\n","")
-        if len(content)>0:
-            self.pureCharacters(content, self._element)
+        self._content+=content.strip().replace("\n","")
+
         
     def skippedEntity(self, name):
         pass
