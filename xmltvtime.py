@@ -26,3 +26,8 @@ def timeDistance(start, stop):
 def addMinuts(time, delta):
     minuts = dayTime(time) + delta
     return time[:8] + str(int(minuts/60)).zfill(2) + str(minuts%60).zfill(2) + time[12:]
+
+def nextFullHour(datetime):
+    tunti=hour(datetime) + 1
+    paiva=day(datetime) + (1 if tunti>23 else 0)
+    return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]

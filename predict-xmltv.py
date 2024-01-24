@@ -3,11 +3,6 @@ import tester
 import ltlib
 import xmltvtime
 
-def nextFullHour(datetime):
-    tunti=xmltvtime.hour(datetime) + 1
-    paiva=xmltvtime.day(datetime) + (1 if tunti>23 else 0)
-    return datetime[:6]+str(paiva).zfill(2)+str(tunti%24).zfill(2)+"0000"+datetime[14:]
-
 def removeDuplicates(channel):
     convert={
         "1549.dvb.guide": "mtv3.fi",
@@ -34,17 +29,20 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def currentProgram(self):
         return self.programs[self.current['title']]
     
-    def currentPaikka(self):
-        daytime = xmltvtime.dayTime(self.current["start"])
+    def dayProfileName(self):
         daytype = xmltvtime.dayType(self.current["start"])
-        return removeDuplicates(self.current["channel"])+":"+daytype+":"+str(daytime).zfill(4)
+        return removeDuplicates(self.current["channel"]) + ":" + daytype
+    
+    def currentPaikka(self):
+        prefix = self.dayProfileName()
+        daytime = xmltvtime.dayTime(self.current["start"])
+        return prefix + ":" + str(daytime).zfill(4)
     
     def nearPaikka(self):
+        prefix = self.dayProfileName()
         daytime = xmltvtime.dayTime(self.current["start"])
-        daytype = xmltvtime.dayType(self.current["start"])
-        prefix = removeDuplicates(self.current["channel"]) + ":" + daytype + ":"
-        for addminute in (0, 5, -5):            
-            key = prefix + str(daytime+addminute).zfill(4)
+        for addminute in (0, 5, -5):
+            key = prefix + ":" + str(daytime+addminute).zfill(4)
             if key in self.ohjelmapaikat:
                 return key
         return None
@@ -72,7 +70,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if assume is not None:
                     if assume in self.programs and "duration" in self.programs[assume]:
                         return xmltvtime.addMinuts(start, self.programs[assume]["duration"])
-                return nextFullHour(start)
+                return xmltvtime.nextFullHour(start)
             case "title":
                 if element in self.current:
                     if element+"-"+lang in self.currentProgram():
