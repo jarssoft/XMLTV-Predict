@@ -105,12 +105,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     return self.currentProgram()[element+"-"+lang]
                 if lang=="sv":
                     if element+"-no" in self.currentProgram():
-                        return self.currentProgram()[element+"-no"]
+                        return self.currentProgram()[element+"-no"].replace(" fra ", " från ").replace(" familieserie ", " familjeserie ").replace("komiserie", "komediserie").replace("underhollning" ,"underhållning")
                     if element+"-fi" in self.currentProgram():
-                        return self.currentProgram()[element+"-fi"]                    
+                        return self.currentProgram()[element+"-fi"].replace("Magasin", "Makasiini")
                 if lang=="no":
                     if element+"-da" in self.currentProgram():
-                        return self.currentProgram()[element+"-da"]
+                        return self.currentProgram()[element+"-da"].replace("komedieserie", "komiserie").replace("animationsserie", "animasjonsserie")
                     
             case "categoryn":
                 if element in self.current:
