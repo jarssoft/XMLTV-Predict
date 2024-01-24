@@ -97,7 +97,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             return assume
                 if element in self.last:
                     return self.last[element]
-            case "sub-title":
+                
+            case "sub-title": 
                 if element+"-"+lang in self.current:
                     return self.current[element+"-"+lang]
                 if element+"-"+lang in self.currentProgram():
@@ -105,9 +106,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if lang=="sv":
                     if element+"-no" in self.currentProgram():
                         return self.currentProgram()[element+"-no"]
+                    if element+"-fi" in self.currentProgram():
+                        return self.currentProgram()[element+"-fi"]                    
                 if lang=="no":
                     if element+"-da" in self.currentProgram():
                         return self.currentProgram()[element+"-da"]
+                    
             case "categoryn":
                 if element in self.current:
                     return self.current[element]
