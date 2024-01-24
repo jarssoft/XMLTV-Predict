@@ -3,19 +3,6 @@ import tester
 import ltlib
 import xmltvtime
 
-def removeDuplicates(channel):
-    convert={
-        "1549.dvb.guide": "mtv3.fi",
-        "1501.dvb.guide": "tv1.yle.fi",
-        "1502.dvb.guide": "tv2.yle.fi",
-        "1503.dvb.guide": "fem.yle.fi"
-    }
-
-    if channel in convert:
-        return convert[channel]
-    else:
-        return channel
-
 class XMLTVPredicter(tester.XMLTVHandler):
 
     currentByChannel={}
@@ -31,7 +18,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     
     def dayProfileName(self):
         daytype = xmltvtime.dayType(self.current["start"])
-        return removeDuplicates(self.current["channel"]) + ":" + daytype
+        return self.uniqueChannel() + ":" + daytype
     
     def currentPaikka(self):
         prefix = self.dayProfileName()
@@ -47,6 +34,19 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 return key
         return None
 
+    duplicates={
+        "1549.dvb.guide": "mtv3.fi",
+        "1501.dvb.guide": "tv1.yle.fi",
+        "1502.dvb.guide": "tv2.yle.fi",
+        "1503.dvb.guide": "fem.yle.fi"
+    }
+
+    def uniqueChannel(self):
+        if self.current["channel"] in self.duplicates:
+            return self.duplicates[self.current["channel"]]
+        else:
+            return self.current["channel"]
+    
     def predict(self, element, lang):
         match element:
 
@@ -147,15 +147,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.last={}
                 else:
                     self.last=self.current
-                    if removeDuplicates(self.current["channel"]) in ("mtv3.fi","tv1.yle.fi", "tv2.yle.fi"):
-                        self.rinnakkaisohjelmat[removeDuplicates(self.current["channel"])+":"+self.current["start"]] = self.current
+                    if self.uniqueChannel() in self.duplicates.values():
+                        key = self.uniqueChannel()+":"+self.current["start"]
+                        self.rinnakkaisohjelmat[key] = self.current
                 self.current={element:content}
 
             case "start":
                 self.current[element]=content
-                if removeDuplicates(self.current["channel"]) in ("mtv3.fi","tv1.yle.fi", "tv2.yle.fi"):
-                    if removeDuplicates(self.current["channel"])+":"+self.current["start"] in self.rinnakkaisohjelmat:
-                        self.current = self.rinnakkaisohjelmat[removeDuplicates(self.current["channel"])+":"+self.current["start"]]
+                if self.uniqueChannel() in self.duplicates.values():
+                    key = self.uniqueChannel()+":"+self.current["start"]
+                    if key in self.rinnakkaisohjelmat:
+                        self.current = self.rinnakkaisohjelmat[key]
 
             case "stop":
                 self.current[element]=content
