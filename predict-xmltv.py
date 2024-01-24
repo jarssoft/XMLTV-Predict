@@ -167,21 +167,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.current[element]=content
                     if content not in self.programs:
                         self.programs[content]={}
-                        if ":" in content or " (" in content:
-                            uppertitle=content.split(":")[0].split(" (")[0]
+                        if ": " in content or " (" in content:
+                            uppertitle=content.split(": ")[0].split(" (")[0]
                             for key in self.programs:
-                                if uppertitle in key:
-                                    if "categoryn" in self.programs[key]:
-                                        self.programs[content]["categoryn"]=self.programs[key]["categoryn"]
-                                    if "sub-title-fi" in self.programs[key]:
-                                        self.programs[content]["sub-title-fi"]=self.programs[key]["sub-title-fi"]
-                                    if "sub-title-sv" in self.programs[key]:
-                                        self.programs[content]["sub-title-sv"]=self.programs[key]["sub-title-sv"]                                        
-                                    break
+                                if key.startswith(uppertitle):
+                                    self.programs[content].update(self.programs[key])                                
                         self.programs[content]["duration"] = self.current["duration"]
                     self.ohjelmapaikat[self.currentPaikka()] = content
                     if element in self.last:
-                        self.programs[self.last["title"]]["after"]=content
+                        self.programs[self.last[element]]["after"]=content
                 self.currentProgram()[element+"-"+lang] = content
 
             case "sub-title":
