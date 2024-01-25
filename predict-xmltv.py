@@ -101,16 +101,25 @@ class XMLTVPredicter(tester.XMLTVHandler):
             case "sub-title": 
                 if element+"-"+lang in self.current:
                     return self.current[element+"-"+lang]
-                if element+"-"+lang in self.currentProgram():
-                    return self.currentProgram()[element+"-"+lang]
+
+                episodehash=None       
+                if "episode" in self.current:
+                    episodehash=self.current["episode"]
+                elif "last-"+element+"-"+lang in self.currentProgram():
+                    episodehash=self.currentProgram()["last-"+element+"-"+lang]
+                if episodehash is not None:
+                    if "episodes" in self.currentProgram():
+                        if episodehash in self.currentProgram()["episodes"]:
+                            if lang in self.currentProgram()["episodes"][episodehash]:
+                                return self.currentProgram()["episodes"][episodehash][lang]
                 if lang=="sv":
-                    if element+"-no" in self.currentProgram():
-                        return self.currentProgram()[element+"-no"].replace(" fra ", " från ").replace(" familieserie ", " familjeserie ").replace("komiserie", "komediserie").replace("underhollning" ,"underhållning")
-                    if element+"-fi" in self.currentProgram():
-                        return self.currentProgram()[element+"-fi"].replace("Magasin", "Makasiini")
+                    if element+"-no" in self.current:
+                        return self.current[element+"-no"].replace(" fra ", " från ").replace(" familieserie ", " familjeserie ").replace("komiserie", "komediserie").replace("underhollning" ,"underhållning")
+                    if element+"-fi" in self.current:
+                        return self.current[element+"-fi"].replace("Magasin", "Makasiini")
                 if lang=="no":
-                    if element+"-da" in self.currentProgram():
-                        return self.currentProgram()[element+"-da"].replace("komedieserie", "komiserie").replace("animationsserie", "animasjonsserie")
+                    if element+"-da" in self.current:
+                        return self.current[element+"-da"].replace("komedieserie", "komiserie").replace("animationsserie", "animasjonsserie")
                     
             case "categoryn":
                 if element in self.current:
@@ -185,7 +194,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.currentProgram()[element+"-"+lang] = content
 
             case "sub-title":
-                self.currentProgram()[element+"-"+lang] = content
+                if "episode" not in self.current:
+                    episodehash=hash(content)
+                    if "episodes" not in self.currentProgram():
+                        self.currentProgram()["episodes"]={}
+                    if episodehash not in self.currentProgram()["episodes"]:
+                        self.currentProgram()["episodes"][episodehash]={}                                                              
+                    self.current["episode"]=episodehash
+                self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
+                self.currentProgram()["last-"+element+"-"+lang] = self.current["episode"]
                 self.current[element+"-"+lang]=content
 
             case "categoryn":
