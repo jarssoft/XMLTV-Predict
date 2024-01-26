@@ -4,8 +4,21 @@ def deschash(desc):
     match = re.search("^(UUSI KAUSI. )?Kausi ([0-9]+). Jakso ([0-9]+)/([0-9]+).(.*)$", desc)
     if match is not None:
         return int(match.group(3)) + int(match.group(2))*10000 
-    else:
-        return hash(desc)
+    match = re.search("^(UUSI KAUSI. )?Kausi ([0-9]+). Jakso ([0-9]+)\.(.*)$", desc)
+    if match is not None:
+        return int(match.group(3)) + int(match.group(2))*10000
+    match = re.search("^Kausi ([0-9]+), ([0-9]+)/([0-9]+)[\. ](.*)$", desc)
+    if match is not None:
+        return int(match.group(2)) + int(match.group(1))*10000
+    
+    #match = re.search("^Kausi ([0-9]+)\. Osa ([0-9]+)(/[0-9]+)?\.$", desc)
+    #if match is not None:
+    #    return int(match.group(2)) + int(match.group(1))*10000
+    
+    #match = re.search("Osa ([0-9]+):(.*)$", desc)
+    #if match is not None:
+    #    return int(match.group(1)) + 1*10000    
+    return hash(desc)
 
 class Desc:
 
