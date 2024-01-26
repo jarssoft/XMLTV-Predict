@@ -103,13 +103,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if element+"-"+lang in self.current:
                     return self.current[element+"-"+lang]
 
-                episodehash=None       
-                if "episode" in self.current:
-                    episodehash=self.current["episode"]
-                elif "last-"+element+"-"+lang in self.currentProgram():
-                    episodehash=self.currentProgram()["last-"+element+"-"+lang]
-                if episodehash is not None:
-                    if "episodes" in self.currentProgram():
+                if "episodes" in self.currentProgram():
+                    episodehash=None       
+                    if "episode" in self.current:
+                        episodehash=self.current["episode"]
+                    elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
+                        episodehash=self.last["episode"]+1
+                    elif "last-episode" in self.currentProgram():
+                        episodehash=self.currentProgram()["last-episode"]
+                    if episodehash is not None:                    
                         if episodehash in self.currentProgram()["episodes"]:
                             if lang in self.currentProgram()["episodes"][episodehash]:
                                 return self.currentProgram()["episodes"][episodehash][lang]
@@ -203,7 +205,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.currentProgram()["episodes"][episodehash]={}                                                              
                     self.current["episode"]=episodehash
                 self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
-                self.currentProgram()["last-"+element+"-"+lang] = self.current["episode"]
+                self.currentProgram()["last-episode"] = self.current["episode"]
                 self.current[element+"-"+lang]=content
                 if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
                     lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
