@@ -1,5 +1,12 @@
 import re 
 
+def deschash(desc):
+    match = re.search("^(UUSI KAUSI. )?Kausi ([0-9]+). Jakso ([0-9]+)/([0-9]+).(.*)$", desc)
+    if match is not None:
+        return int(match.group(3)) + int(match.group(2))*10000 
+    else:
+        return hash(desc)
+
 class Desc:
 
     def __init__(self, desc):

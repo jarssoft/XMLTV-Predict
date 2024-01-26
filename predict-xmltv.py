@@ -2,6 +2,7 @@
 import tester
 import ltlib
 import xmltvtime
+import descparser
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
@@ -195,7 +196,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
             case "sub-title":
                 if "episode" not in self.current:
-                    episodehash=hash(content)
+                    episodehash=descparser.deschash(content)
                     if "episodes" not in self.currentProgram():
                         self.currentProgram()["episodes"]={}
                     if episodehash not in self.currentProgram()["episodes"]:
@@ -204,12 +205,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
                 self.currentProgram()["last-"+element+"-"+lang] = self.current["episode"]
                 self.current[element+"-"+lang]=content
+                if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
+                    lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
 
             case "categoryn":
                 self.currentProgram()[element] = content
                 self.current[element]=content
-                if "tv1" in self.current["channel"]:# and not correct:
-                    lt.addProgram(self.current["start"], self.current["stop"], self.current["title"], correct)
 
             case "category":
                 self.categories[self.current['categoryn']]=content

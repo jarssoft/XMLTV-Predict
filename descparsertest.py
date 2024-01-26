@@ -18,4 +18,5 @@ for desc1 in descs:
             descobj1.addJakso()    
         print(descobj1.str())
         print(hash(descobj1))
+    print(descparser.deschash(desc1))
 
