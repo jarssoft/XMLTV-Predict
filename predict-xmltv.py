@@ -102,13 +102,24 @@ class XMLTVPredicter(tester.XMLTVHandler):
             case "sub-title": 
                 if element+"-"+lang in self.current:
                     return self.current[element+"-"+lang]
+                
 
                 if "episodes" in self.currentProgram():
+
                     episodehash=None       
+                    if "uusinnat" in self.currentProgram():
+                        thisStart=xmltvtime.totalTime(self.current["start"])                        
+                        for episode in self.currentProgram()["episodes"]:
+                            thisinterval = abs(xmltvtime.totalTime(self.currentProgram()["episodes"][episode]["start"]) - thisStart)
+                            if thisinterval in self.currentProgram()["uusinnat"]:
+                                episodehash=episode
+                                break
                     if "episode" in self.current:
-                        episodehash=self.current["episode"]
+                        episodehash=self.current["episode"]                            
                     elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
                         episodehash=self.last["episode"]+1
+                    elif episodehash is not None:
+                        pass                        
                     elif "last-episode" in self.currentProgram():                        
                         episodehash=self.currentProgram()["last-episode"]
                         if(episodehash+1 in self.currentProgram()["episodes"]):
@@ -198,6 +209,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.programs[self.last[element]]["after"]=content
                 self.currentProgram()[element+"-"+lang] = content
 
+
             case "sub-title":
                 if "episode" not in self.current:
                     episodehash=descparser.deschash(content)
@@ -205,12 +217,22 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.currentProgram()["episodes"]={}
                     if episodehash not in self.currentProgram()["episodes"]:
                         self.currentProgram()["episodes"][episodehash]={}                                                              
+                    else:
+                        uusintaAikavali = abs(xmltvtime.totalTime(self.current["start"]) - xmltvtime.totalTime(self.currentProgram()["episodes"][episodehash]["start"]))                        
+                        if(uusintaAikavali>60):                            
+                            if "uusinnat" not in self.currentProgram():
+                                self.currentProgram()["uusinnat"]=[]
+                            if uusintaAikavali not in self.currentProgram()["uusinnat"]:
+                                self.currentProgram()["uusinnat"].append(uusintaAikavali)
+                    self.currentProgram()["episodes"][episodehash]["start"] = self.current["start"]
+
                     self.current["episode"]=episodehash
                 self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
                 self.currentProgram()["last-episode"] = self.current["episode"]
                 self.current[element+"-"+lang]=content
                 if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
-                    lt.addProgram(self.current["start"], self.current["stop"], self.current["sub-title-fi"], correct)
+                #if "sub.fi" in self.current["channel"] and "Salatut" in self.current["title"]:
+                    lt.addProgram(self.current["start"], self.current["stop"], str(self.current["episode"]), correct)
 
             case "categoryn":
                 self.currentProgram()[element] = content
@@ -228,5 +250,5 @@ predicter = XMLTVPredicter()
 #file=sys.argv[1]
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
-#print(predicter.ohjelmapaikat)
+#print(predicter.programs)
 lt.save()
