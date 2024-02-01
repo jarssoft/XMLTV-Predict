@@ -12,7 +12,7 @@ class LongTerm:
     minstart=xmltvtime.hour(start)*60+xmltvtime.minute(start)
     minstop=xmltvtime.hour(stop)*60+xmltvtime.minute(stop)
     day=xmltvtime.day(start)-21
-    print(minstart, minstop)
+    #print(minstart, minstop)
     ltdraw.addProgram(self.context, day, minstart, minstop, title, correct)
 
   def save(self):
