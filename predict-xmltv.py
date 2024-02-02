@@ -53,10 +53,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
             case "channel":
                 if element in self.last:
-                    return self.last[element]            
+                    return self.last[element]
+                
             case "start":
                 if "stop" in self.last:
                     return self.last['stop']
+                
             case "stop":
                 if element in self.current:
                     return self.current[element]
@@ -72,6 +74,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     if assume in self.programs and "duration" in self.programs[assume]:
                         return xmltvtime.addMinuts(start, self.programs[assume]["duration"])
                 return xmltvtime.nextFullHour(start)
+            
             case "title":
                 if element in self.current:
                     if element+"-"+lang in self.currentProgram():
@@ -103,31 +106,39 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if element+"-"+lang in self.current:
                     return self.current[element+"-"+lang]
                 
-
                 if "episodes" in self.currentProgram():
 
                     episodehash=None       
                     if "uusinnat" in self.currentProgram():
                         thisStart=xmltvtime.totalTime(self.current["start"])                        
-                        for episode in self.currentProgram()["episodes"]:
-                            thisinterval = abs(xmltvtime.totalTime(self.currentProgram()["episodes"][episode]["start"]) - thisStart)
-                            if thisinterval in self.currentProgram()["uusinnat"]:
-                                episodehash=episode
-                                break
+                        for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
+                            episodeStart = xmltvtime.totalTime(episodeValue["start"])
+                            if abs(episodeStart - thisStart) in self.currentProgram()["uusinnat"]:                               
+                                if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodeKey] and self.current["age"] == self.currentProgram()["episodes"][episodeKey]["age"]:
+                                    episodehash=episodeKey
+                                    break
                     if "episode" in self.current:
                         episodehash=self.current["episode"]                            
                     elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
-                        episodehash=self.last["episode"]+1
+                        nextepisode=self.last["episode"]+1
+                        if "age" not in self.current or "age" in self.currentProgram()["episodes"][nextepisode] and self.current["age"] == self.currentProgram()["episodes"][nextepisode]["age"]:
+                            episodehash=self.last["episode"]+1
                     elif episodehash is not None:
                         pass                        
                     elif "last-episode" in self.currentProgram():                        
                         episodehash=self.currentProgram()["last-episode"]
                         if(episodehash+1 in self.currentProgram()["episodes"]):
-                            episodehash+=1
-                    if episodehash is not None:                    
-                        if episodehash in self.currentProgram()["episodes"]:
-                            if lang in self.currentProgram()["episodes"][episodehash]:
-                                return self.currentProgram()["episodes"][episodehash][lang]
+                            if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodehash+1] and self.current["age"] == self.currentProgram()["episodes"][episodehash+1]["age"]:    
+                                episodehash+=1
+                    #if episodehash is None and "age" in self.current:
+                    #     for episodeKey, episodeValue in self.currentProgram()["episodes"].items():                            
+                    #        if "age" in episodeValue and self.current["age"] == episodeValue["age"]:                                
+                    #            episodehash=episodeKey
+
+                    if episodehash is not None:
+                            if episodehash in self.currentProgram()["episodes"]:
+                                if lang in self.currentProgram()["episodes"][episodehash]:
+                                    return self.currentProgram()["episodes"][episodehash][lang]
                 if lang=="sv":
                     if element+"-no" in self.current:
                         return self.current[element+"-no"].replace(" fra ", " från ").replace(" familieserie ", " familjeserie ").replace("komiserie", "komediserie").replace("underhollning" ,"underhållning")
@@ -189,11 +200,18 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         self.current = self.rinnakkaisohjelmat[key]
 
             case "stop":
-                self.current[element]=content
+                self.current[element] = content
                 self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content)
-                assert self.current["duration"]>=0
+                assert self.current["duration"] >= 0
 
             case "title":
+                age=None
+                if " (" in content:
+                    age = " (" + content.split(" (")[1]
+                    #content = content.split(" (")[0]
+                    #print (content, age)
+                    self.current["age"] = age
+
                 if element not in self.current:
                     self.current[element]=content
                     if content not in self.programs:
@@ -208,6 +226,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     if element in self.last:
                         self.programs[self.last[element]]["after"]=content
                 self.currentProgram()[element+"-"+lang] = content
+                if age is not None:
+                    self.currentProgram()["age"] = age
 
 
             case "sub-title":
@@ -218,13 +238,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     if episodehash not in self.currentProgram()["episodes"]:
                         self.currentProgram()["episodes"][episodehash]={}                                                              
                     else:
-                        uusintaAikavali = abs(xmltvtime.totalTime(self.current["start"]) - xmltvtime.totalTime(self.currentProgram()["episodes"][episodehash]["start"]))                        
-                        if(uusintaAikavali>60):                            
+                        thisStart=xmltvtime.totalTime(self.current["start"])
+                        episodeStart=xmltvtime.totalTime(self.currentProgram()["episodes"][episodehash]["start"])
+                        uusintaAikavali = abs(thisStart - episodeStart)                        
+                        if(uusintaAikavali>60):
                             if "uusinnat" not in self.currentProgram():
                                 self.currentProgram()["uusinnat"]=[]
                             if uusintaAikavali not in self.currentProgram()["uusinnat"]:
                                 self.currentProgram()["uusinnat"].append(uusintaAikavali)
                     self.currentProgram()["episodes"][episodehash]["start"] = self.current["start"]
+                    if "age" in self.current:
+                        self.currentProgram()["episodes"][episodehash]["age"] = self.current["age"]
 
                     self.current["episode"]=episodehash
                 self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
@@ -232,7 +256,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.current[element+"-"+lang]=content
                 if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
                 #if "sub.fi" in self.current["channel"] and "Salatut" in self.current["title"]:
-                    lt.addProgram(self.current["start"], self.current["stop"], str(self.current["episode"]), correct)
+                    lt.addProgram(self.current["start"], self.current["stop"], str(self.current["title"]), correct)
 
             case "categoryn":
                 self.currentProgram()[element] = content
