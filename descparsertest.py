@@ -10,12 +10,13 @@ descs=[
     'Kausi 26. Jakso 18. Äiti kyylä. Bart val',
     'Osa 3229: Taalasmaa impotenssiin kaksi.',
     'Kausi 9, 7/17. Poliisin hämmentävät sala',
-    'Kausi 8. Osa 4.'
+    'Kausi 8. Osa 4.',
+    '(Ep 35/s2) Irlantilainen animmatiosarja'
     ]
 
 for desc1 in descs:
 
-    descobj1=descparser.Desc(desc1)
+    #descobj1=descparser.Desc(desc1)
 
     #for i in range(1,10):
     #    if descobj1.hasJakso() and not descobj1.isLastJakso():
@@ -24,4 +25,5 @@ for desc1 in descs:
     #    print(hash(descobj1))
     print(desc1)
     print(descparser.deschash(desc1))
+    print(descparser.nextEpisode(desc1))
 

@@ -10,6 +10,10 @@ def descParse(desc):
     match = re.search("^Kausi ([0-9]+), ([0-9]+)/([0-9]+)[\. ](.*)$", desc)
     if match is not None:
         return (int(match.group(2)) + int(match.group(1))*10000, 3, match)
+    match = re.search("^\(Ep ([0-9]+)/s([0-9]+)\)(.*)$", desc)
+    if match is not None:
+        return (int(match.group(1)) + int(match.group(2))*10000, 4, match)
+     
     
     #match = re.search("^Kausi ([0-9]+)\. Osa ([0-9]+)(/[0-9]+)?\.$", desc)
     #if match is not None:
@@ -24,14 +28,20 @@ def deschash(desc):
     return descParse(desc)[0]
 
 def changeEpisode(episode, pattern, match):
-    return str(match.group(1)) if match.group(1) is not None else "" + "Kausi "+match.group(2)+". Jakso "+str(episode%10000)+"/"+match.group(4)+"."+match.group(5)
+    if pattern==1:        
+        return str(match.group(1)) if match.group(1) is not None else "" + "Kausi "+match.group(2)+". Jakso "+str(episode%10000)+"/"+match.group(4)+"."+match.group(5)
+    if pattern==4:        
+        return "(Ep "+str(episode%10000)+"/s"+match.group(2)+")"+match.group(3)
+
 
 def addEpisode(desc, i):
     hash, pattern, match = descParse(desc)    
-    
-    if pattern==1:
-        print(desc)    
-        print(i)
+    #assert(pattern!=4)
+    print(desc)    
+
+    if pattern:
+        
+        #print(i)
         desc = changeEpisode(hash+i, pattern, match)
         print(desc)
     return desc

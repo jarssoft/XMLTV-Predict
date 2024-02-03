@@ -129,7 +129,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                 jakso = int((thisStart-episodeStart) / (60*24))
                                 if episodeKey+jakso in self.currentProgram()["episodes"].keys():
                                     episodehash = episodeKey + jakso
-                                elif "nelonen" in self.current["channel"]:
+                                elif self.current["channel"] in ["nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi", "1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide"]:
                                     if "fi" in self.currentProgram()["episodes"][episodeKey]:
                                         episodeform=self.currentProgram()["episodes"][episodeKey]["fi"]
                                         episodeAdd=jakso
@@ -148,17 +148,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             nextepisode=self.last["episode"]+1
                             if "age" not in self.current or "age" in self.currentProgram()["episodes"][nextepisode] and self.current["age"] == self.currentProgram()["episodes"][nextepisode]["age"]:
                                 episodehash=self.last["episode"]+1
-                        elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and "nelonen" in self.current["channel"]:
-                             if "fi" in self.currentProgram()["episodes"][self.last["episode"]]:
+                        elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and (self.current["channel"] in ["nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi", "1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide"]):
+
+                            if "fi" in self.currentProgram()["episodes"][self.last["episode"]]:
                                  #return descparser.nextEpisode(self.currentProgram()["episodes"][self.last["episode"]]["fi"])
                                  episodeform=self.currentProgram()["episodes"][self.last["episode"]]["fi"]
                                  episodeAdd=1
 
                     if episodeAdd is not None:
                         return descparser.addEpisode(episodeform, episodeAdd)
-
-
-                     
 
                         #elif "nelonen" in self.current["channel"]:
                          #       if lang in self.currentProgram()["episodes"][episodehash]:
@@ -292,8 +290,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.currentProgram()["episodes"][self.current["episode"]][lang] = content  
                 self.currentProgram()["last-episode"] = self.current["episode"]
                 self.current[element+"-"+lang]=content
-                if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
+                #if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
                 #if "sub.fi" in self.current["channel"] and "Salatut" in self.current["title"]:
+                if "1585.dvb.guide" in self.current["channel"]:# and "Violetta" in self.current["title"]:
                     lt.addProgram(self.current["start"], self.current["stop"], str(self.current["title"]), correct)
 
             case "categoryn":
