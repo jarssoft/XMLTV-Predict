@@ -26,14 +26,18 @@ def deschash(desc):
 def changeEpisode(episode, pattern, match):
     return str(match.group(1)) if match.group(1) is not None else "" + "Kausi "+match.group(2)+". Jakso "+str(episode%10000)+"/"+match.group(4)+"."+match.group(5)
 
-def nextEpisode(desc):
+def addEpisode(desc, i):
     hash, pattern, match = descParse(desc)    
     
     if pattern==1:
         print(desc)    
-        desc = changeEpisode(hash+1, pattern, match)
+        print(i)
+        desc = changeEpisode(hash+i, pattern, match)
         print(desc)
     return desc
+
+def nextEpisode(desc):
+    return addEpisode(desc, 1)
 
 class Desc:
 

@@ -109,19 +109,27 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if "episodes" in self.currentProgram():
 
                     episodehash=None       
-                    if "uusinnat" in self.currentProgram():
-                        thisStart=xmltvtime.totalTime(self.current["start"])                        
+                    thisStart=xmltvtime.totalTime(self.current["start"])
+
+                    #jos samanniminen ohjelma tulee samaan aikan päivästä, jaksoero on yhtäkuin päiväero
+                    for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
+                        episodeStart = xmltvtime.totalTime(episodeValue["start"])
+                        if ((episodeStart-thisStart) % (60*24)) == 0:
+                            jakso = int((thisStart-episodeStart) / (60*24))
+                            if episodeKey+jakso in self.currentProgram()["episodes"].keys():
+                                episodehash = episodeKey+jakso
+                            #elif "nelonen" in self.current["channel"]:
+                            #    if lang in self.currentProgram()["episodes"][episodeKey]:
+                            #        return descparser.addEpisode(self.currentProgram()["episodes"][episodeKey][lang], jakso)
+
+                    if "uusinnat" in self.currentProgram():                        
                         for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
                             episodeStart = xmltvtime.totalTime(episodeValue["start"])
                             if abs(episodeStart - thisStart) in self.currentProgram()["uusinnat"]:                               
                                 if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodeKey] and self.current["age"] == self.currentProgram()["episodes"][episodeKey]["age"]:
                                     episodehash=episodeKey
                                     break
-
-                    
-                    #elif "episodes" in self.currentProgram():
-                    #    for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
-
+                                                    
                     if "episode" in self.current:
                         episodehash=self.current["episode"]                            
                     elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
