@@ -117,12 +117,20 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                 if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodeKey] and self.current["age"] == self.currentProgram()["episodes"][episodeKey]["age"]:
                                     episodehash=episodeKey
                                     break
+
+                    
+                    #elif "episodes" in self.currentProgram():
+                    #    for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
+
                     if "episode" in self.current:
                         episodehash=self.current["episode"]                            
                     elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
                         nextepisode=self.last["episode"]+1
                         if "age" not in self.current or "age" in self.currentProgram()["episodes"][nextepisode] and self.current["age"] == self.currentProgram()["episodes"][nextepisode]["age"]:
                             episodehash=self.last["episode"]+1
+                    elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and "nelonen" in self.current["channel"]:
+                            if "fi" in self.currentProgram()["episodes"][self.last["episode"]]:
+                                return descparser.nextEpisode(self.currentProgram()["episodes"][self.last["episode"]]["fi"])
                     elif episodehash is not None:
                         pass                        
                     elif "last-episode" in self.currentProgram():                        
@@ -130,6 +138,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if(episodehash+1 in self.currentProgram()["episodes"]):
                             if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodehash+1] and self.current["age"] == self.currentProgram()["episodes"][episodehash+1]["age"]:    
                                 episodehash+=1
+                        #elif "nelonen" in self.current["channel"]:
+                         #       if lang in self.currentProgram()["episodes"][episodehash]:
+                         #           return descparser.nextEpisode(self.currentProgram()["episodes"][episodehash][lang])
                     #if episodehash is None and "age" in self.current:
                     #     for episodeKey, episodeValue in self.currentProgram()["episodes"].items():                            
                     #        if "age" in episodeValue and self.current["age"] == episodeValue["age"]:                                
@@ -162,11 +173,13 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if 'sub-title' in self.current and "reality" in self.current['sub-title']:
                     return "30"                                
                 if 'sub-title' in self.current and "Kausi" in self.current['sub-title']:
-                    return "10"                                
+                    return "10"
+                
             case "category":
                 if self.current['categoryn'] in self.categories:
-                    return self.categories[self.current['categoryn']]              
-                return 'Movie / Drama'                
+                    return self.categories[self.current['categoryn']]
+                return 'Movie / Drama'
+            
             case "value":
                 for age in range(0,20):
                     if "("+str(age)+")" in self.current['title']:
@@ -228,7 +241,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 self.currentProgram()[element+"-"+lang] = content
                 if age is not None:
                     self.currentProgram()["age"] = age
-
 
             case "sub-title":
                 if "episode" not in self.current:
