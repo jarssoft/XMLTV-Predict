@@ -217,11 +217,10 @@ class XMLTVPredicter(tester.XMLTVHandler):
             return 'Movie / Drama'
         
         case "value":
-            for age in range(0,20):
-                if "("+str(age)+")" in self.current['title']:
-                    return str(age)
-
-      return None
+            if "age" in self.current:
+                for age in (7, 11, 12, 15, 16, 18):
+                    if " ("+str(age)+")" == self.current["age"]:
+                        return str(age)
     
     def expose(self, element, content, lang, correct):
 
@@ -254,10 +253,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
             assert self.current["duration"] >= 0
 
         case "title":
-            age=None
             if " (" in content:
-                age = " (" + content.split(" (")[1]
-                self.current["age"] = age
+                self.current["age"] = " (" + content.split(" (")[-1]
 
             if element not in self.current:
                 self.current[element]=content
@@ -273,8 +270,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if element in self.last:
                     self.programs[self.last[element]]["after"]=content
             self.currentProgram()[element+"-"+lang] = content
-            if age is not None:
-                self.currentProgram()["age"] = age
+            if "age" in self.current:
+                self.currentProgram()["age"] = self.current["age"]
 
         case "sub-title":                
             if "episode" not in self.current:
