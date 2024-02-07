@@ -8,12 +8,14 @@ class LongTerm:
     self.context = cairo.Context(self.surface)
     ltdraw.drawBackGround(self.context)
 
-  def addProgram(self, start, stop, title, correct):
-    minstart=xmltvtime.hour(start)*60+xmltvtime.minute(start)
-    minstop=xmltvtime.hour(stop)*60+xmltvtime.minute(stop)
-    day=xmltvtime.day(start)-21
+  def setInterval(self, start, stop):
+    self.minstart=xmltvtime.hour(start)*60+xmltvtime.minute(start)
+    self.minstop=xmltvtime.hour(stop)*60+xmltvtime.minute(stop)
+    self.day=xmltvtime.day(start)-21
+
+  def addProgram(self, title, correct):
     #print(minstart, minstop)
-    ltdraw.addProgram(self.context, day, minstart, minstop, title, correct)
+    ltdraw.addProgram(self.context, self.day, self.minstart, self.minstop, title, correct)
 
   def save(self):
     self.context.save()
