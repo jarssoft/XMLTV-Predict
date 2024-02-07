@@ -4,6 +4,9 @@ import ltlib
 import xmltvtime
 import descparser
 
+nelonenMedia = ("nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi")
+disney= ("1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide")
+
 class XMLTVPredicter(tester.XMLTVHandler):
 
     currentByChannel={}
@@ -34,6 +37,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if key in self.ohjelmapaikat:
                 return key
         return None
+
+    def ageMatch(self, episode):
+        return "age" not in self.current or "age" in episode and self.current["age"] == episode["age"]
+    
+    def durationConflict(self, program):
+        return "duration" in program and abs(program["duration"]-self.current["duration"])>15
 
     duplicates={
         "1549.dvb.guide": "mtv3.fi",
@@ -89,16 +98,16 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                 return self.currentProgram()[element+"-da"]
                         return self.current[element]
                 paikka = self.nearPaikka()                
-                currentDuration = self.current["duration"]
                 if paikka is not None:
                     assume=self.ohjelmapaikat[paikka]                    
-                    if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-currentDuration)<=15:
+                    if not self.durationConflict(self.programs[assume]):
                         return assume
                 if element in self.last:                    
                     if "after" in self.programs[self.last["title"]]:
                         assume = self.programs[self.last["title"]]["after"]
-                        if "duration" not in self.programs[assume] or abs(self.programs[assume]["duration"]-currentDuration)<=15:
+                        if not self.durationConflict(self.programs[assume]):
                             return assume
+                        
                 if element in self.last:
                     return self.last[element]
                 
@@ -119,7 +128,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if "last-episode" in self.currentProgram():                        
                             episodehash=self.currentProgram()["last-episode"]
                             if(episodehash+1 in self.currentProgram()["episodes"]):
-                                if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodehash+1] and self.current["age"] == self.currentProgram()["episodes"][episodehash+1]["age"]:    
+                                if self.ageMatch(self.currentProgram()["episodes"][episodehash+1]):
                                     episodehash+=1
 
                         #jos samanniminen ohjelma tulee samaan aikan päivästä, jaksoero on yhtäkuin päiväero
@@ -129,7 +138,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                 jakso = int((thisStart-episodeStart) / (60*24))
                                 if episodeKey+jakso in self.currentProgram()["episodes"].keys():
                                     episodehash = episodeKey + jakso
-                                elif self.current["channel"] in ["nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi", "1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide"]:
+                                elif self.current["channel"] in nelonenMedia+disney:
                                     if "fi" in self.currentProgram()["episodes"][episodeKey]:
                                         episodeform=self.currentProgram()["episodes"][episodeKey]["fi"]
                                         episodeAdd=jakso
@@ -139,49 +148,49 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             for episodeKey, episodeValue in self.currentProgram()["episodes"].items():
                                 episodeStart = xmltvtime.totalTime(episodeValue["start"])
                                 if abs(episodeStart - thisStart) in self.currentProgram()["uusinnat"]:                               
-                                    if "age" not in self.current or "age" in self.currentProgram()["episodes"][episodeKey] and self.current["age"] == self.currentProgram()["episodes"][episodeKey]["age"]:
+                                    if self.ageMatch(self.currentProgram()["episodes"][episodeKey]):
                                         episodehash=episodeKey
                                         break
             
-                        #samannimiset peräkkäiset ohjelmat ovat usein myös peräkkäisiä episodeja                           
-                        if "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and self.last["episode"]+1 in self.currentProgram()["episodes"]:
-                            nextepisode=self.last["episode"]+1
-                            if "age" not in self.current or "age" in self.currentProgram()["episodes"][nextepisode] and self.current["age"] == self.currentProgram()["episodes"][nextepisode]["age"]:
-                                episodehash=self.last["episode"]+1
-                        elif "title" in self.last and self.last["title"] == self.current["title"] and "episode" in self.last and (self.current["channel"] in ["nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi", "1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide"]):
+                        #samannimiset peräkkäiset ohjelmat ovat usein myös peräkkäisiä episodeja
+                        if "title" in self.last and self.last["title"] == self.current["title"]:
+                            if "episode" in self.last:
+                                last = self.last["episode"]
+                                if last+1 in self.currentProgram()["episodes"]:
+                                    nextepisode=last+1
+                                    if self.ageMatch(self.currentProgram()["episodes"][nextepisode]):
+                                        episodehash=nextepisode
+                                elif self.current["channel"] in nelonenMedia+disney:
+                                    if "fi" in self.currentProgram()["episodes"][last]:
+                                        episodeform=self.currentProgram()["episodes"][last]["fi"]
+                                    episodeAdd=1
 
-                            if "fi" in self.currentProgram()["episodes"][self.last["episode"]]:
-                                 #return descparser.nextEpisode(self.currentProgram()["episodes"][self.last["episode"]]["fi"])
-                                 episodeform=self.currentProgram()["episodes"][self.last["episode"]]["fi"]
-                                 episodeAdd=1
-
-                    if episodeAdd is not None:
-                        return descparser.addEpisode(episodeform, episodeAdd)
-
-                        #elif "nelonen" in self.current["channel"]:
-                         #       if lang in self.currentProgram()["episodes"][episodehash]:
-                         #           return descparser.nextEpisode(self.currentProgram()["episodes"][episodehash][lang])
-                    #if episodehash is None and "age" in self.current:
-                    #     for episodeKey, episodeValue in self.currentProgram()["episodes"].items():                            
-                    #        if "age" in episodeValue and self.current["age"] == episodeValue["age"]:                                
-                    #            episodehash=episodeKey
+                        if episodeAdd is not None:
+                            return descparser.addEpisode(episodeform, episodeAdd)
 
                     if episodehash is not None:
                         if episodehash in self.currentProgram()["episodes"]:
                             if lang in self.currentProgram()["episodes"][episodehash]:
                                 return self.currentProgram()["episodes"][episodehash][lang]
-                    #if newepisodehash is not None:
-                        #return descparser.addEpisode(episodeform, newepisodehash)
-
 
                 if lang=="sv":
                     if element+"-no" in self.current:
-                        return self.current[element+"-no"].replace(" fra ", " från ").replace(" familieserie ", " familjeserie ").replace("komiserie", "komediserie").replace("underhollning" ,"underhållning")
+                        text=self.current[element+"-no"]
+                        text=text.replace("fra", "från")
+                        text=text.replace("familieserie", "familjeserie")
+                        text=text.replace("komiserie", "komediserie")
+                        text=text.replace("underhollning", "underhållning")
+                        return text
                     if element+"-fi" in self.current:
-                        return self.current[element+"-fi"].replace("Magasin", "Makasiini")
+                        text=self.current[element+"-fi"]
+                        text=text.replace("Magasin", "Makasiini")
+                        return text
                 if lang=="no":
                     if element+"-da" in self.current:
-                        return self.current[element+"-da"].replace("komedieserie", "komiserie").replace("animationsserie", "animasjonsserie")
+                        text=self.current[element+"-da"]
+                        text=text.replace("komedieserie", "komiserie")
+                        text=text.replace("animationsserie", "animasjonsserie")
+                        return text                        
                     
             case "categoryn":
                 if element in self.current:
