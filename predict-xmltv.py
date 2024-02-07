@@ -203,7 +203,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if("Uutiset" in self.current['title']):
                 return "20"
             if("Elokuva:" in self.current['title'] or "Subleffa:" in self.current['title']):
-                return "10"                
+                return "10"
+            if(self.current['duration'] > 70 and self.current['duration'] < 200):
+                return "10"
             if 'sub-title' in self.current and "draama" in self.current['sub-title']:
                 return "10"                                
             if 'sub-title' in self.current and "reality" in self.current['sub-title']:
@@ -259,13 +261,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if element not in self.current:
                 self.current[element]=content
                 if content not in self.programs:
-                    self.programs[content]={}
-                    if ": " in content or " (" in content:
-                        uppertitle=content.split(": ")[0].split(" (")[0]
-                        for key in self.programs:
-                            if key.startswith(uppertitle):
-                                self.programs[content].update(self.programs[key])                                
-                    self.programs[content]["duration"] = self.current["duration"]
+                    self.programs[content]={"duration": self.current["duration"]}
                 self.ohjelmapaikat[self.currentPaikka()] = content
                 if element in self.last:
                     self.programs[self.last[element]]["after"]=content
