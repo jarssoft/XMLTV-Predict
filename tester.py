@@ -3,18 +3,28 @@ import xml.sax
 
 class XMLTVHandler(xml.sax.ContentHandler):
 
-    _data=0
-    _datat={}
+    _compressed={}
+    _original={}
     _element=""
     _lang=""
-    _content=""
+    _content=""    
 
     def startDocument(self):
         pass
 
     def endDocument(self):
-        print("content: "+str(self._datat)+" bytes.")        
-        print("content: "+str(self._data)+" bytes.")
+        print("--------------------------------------------------")
+        print("element         compressed   original        ratio")
+        print("--------------------------------------------------")
+        totalcompressed=0
+        totaloriginal=0        
+        for key in self._compressed.keys():
+            totalcompressed += self._compressed[key]
+            totaloriginal += self._original[key]
+            print((key+" "*15)[:15],(" "*20+str(int(self._compressed[key])))[-10:], (" "*20+str(self._original[key]))[-10:], (" "*20+str(int(self._compressed[key]/self._original[key]*100)))[-10:],"%")
+        print("--------------------------------------------------")
+        #print("content: "+str(self._data)+" bytes.")
+        print(("total"+" "*15)[:15],(" "*20+str(int(totalcompressed)))[-10:], (" "*20+str(totaloriginal))[-10:], (" "*20+str(int(totalcompressed/totaloriginal*100)))[-10:],"%")
         pass
 
     def startElement(self, name, attrs):
@@ -46,7 +56,10 @@ class XMLTVHandler(xml.sax.ContentHandler):
         prediction=self.predict(element, self._lang)    
 
         #print("  prediction: '"+str(prediction)+"'")        
-        
+
+        if(wholeElement not in self._compressed):
+            self._compressed[wholeElement]=0
+            self._original[wholeElement]=0                    
         
         correct=False
         if(prediction==None):
@@ -54,20 +67,18 @@ class XMLTVHandler(xml.sax.ContentHandler):
         else:
             if(prediction==content):
                 newdata=0.125
-                correct=True
+                correct=True                
             else:
                 newdata=0.125+len(content)
 
-        self._data+=newdata
-        if(wholeElement not in self._datat):
-            self._datat[wholeElement]=0
-        self._datat[wholeElement]+=newdata
-
+        self._compressed[wholeElement]+=newdata
+        self._original[wholeElement]+=len(content)
+        
         self.expose(element, content, self._lang, correct)
         
-        #if element=="channel":
-        #    print()
-        #print((wholeElement+":"+" "*15)[:15]+(str(content)+" "*40)[:40]+" "*10+(str(prediction)[:40] if not correct else "---"))
+        if element=="channel":
+            print()
+        print((wholeElement+":"+" "*15)[:15]+(str(content)+" "*40)[:40]+" "*10+(str(prediction)[:40] if not correct else "---"))
 
     def characters(self, content):
         self._content+=content.strip().replace("\n","")
