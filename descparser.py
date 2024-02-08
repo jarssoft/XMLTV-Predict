@@ -37,13 +37,13 @@ def changeEpisode(episode, pattern, match):
 def addEpisode(desc, i):
     hash, pattern, match = descParse(desc)    
     #assert(pattern!=4)
-    print(desc)    
+    #rint(desc)    
 
     if pattern:
         
         #print(i)
         desc = changeEpisode(hash+i, pattern, match)
-        print(desc)
+        #print(desc)
     return desc
 
 def nextEpisode(desc):

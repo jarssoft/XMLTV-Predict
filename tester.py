@@ -7,7 +7,8 @@ class XMLTVHandler(xml.sax.ContentHandler):
     _original={}
     _element=""
     _lang=""
-    _content=""    
+    _content=""
+    _verbosemode=False
 
     def startDocument(self):
         pass
@@ -76,9 +77,10 @@ class XMLTVHandler(xml.sax.ContentHandler):
         
         self.expose(element, content, self._lang, correct)
         
-        if element=="channel":
-            print()
-        print((wholeElement+":"+" "*15)[:15]+(str(content)+" "*40)[:40]+" "*10+(str(prediction)[:40] if not correct else "---"))
+        if self._verbosemode:
+            if element=="channel":
+                print()
+            print((wholeElement+":"+" "*15)[:15]+(str(content)+" "*40)[:40]+" "*10+(str(prediction)[:40] if not correct else "---"))
 
     def characters(self, content):
         self._content+=content.strip().replace("\n","")
@@ -86,6 +88,9 @@ class XMLTVHandler(xml.sax.ContentHandler):
         
     def skippedEntity(self, name):
         pass
+
+    def setVerbose(self, verbosemode):
+        self._verbosemode=verbosemode
 
 def test(predicter, io):
     parser = xml.sax.make_parser()

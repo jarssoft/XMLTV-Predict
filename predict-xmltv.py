@@ -1,4 +1,4 @@
-#import sys
+import sys
 import tester
 import ltlib
 import xmltvtime
@@ -315,6 +315,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
 lt = ltlib.LongTerm("out.svg")
 predicter = XMLTVPredicter()
+predicter.setVerbose("-v" in sys.argv)
+
 #file=sys.argv[1]
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
