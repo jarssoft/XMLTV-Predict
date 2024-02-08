@@ -5,7 +5,7 @@ import xmltvtime
 import descparser
 
 nelonenMedia = ("nelonen.fi", "liv.nelonen.fi", "jim.nelonen.fi")
-disney= ("1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide")
+disney = ("1525.dvb.guide", "1522.dvb.guide", "1518.dvb.guide", "1585.dvb.guide")
 
 class XMLTVPredicter(tester.XMLTVHandler):
 
@@ -16,6 +16,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     programs={}
     ohjelmapaikat={}
     rinnakkaisohjelmat={}
+    stops={}
     
     def currentProgram(self):
         return self.programs[self.current['title']]
@@ -35,7 +36,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
         for addminute in (0, 5, -5):
             key = prefix + ":" + str(daytime+addminute).zfill(4)
             if key in self.ohjelmapaikat:
-                return key
+                return self.ohjelmapaikat[key]
         return None
 
     def ageMatch(self, current, episode):
@@ -72,16 +73,42 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if element in self.current:
                 return self.current[element]
             start = self.current['start']
-            paikka = self.nearPaikka()
-            assume=None
-            if paikka is not None:
-                assume = self.ohjelmapaikat[paikka]                
+            #if "mtv3.fi" in self.current["channel"]:
+            #    return xmltvtime.nextFullHour(start)    
+
+            programname = None
+            
+            # arvataan ohjelma peräkkäisyyden perusteella
             if element in self.last:
                 if "after" in self.programs[self.last["title"]]:
-                    assume = self.programs[self.last["title"]]["after"]                
-            if assume is not None:
-                if assume in self.programs and "duration" in self.programs[assume]:
-                    return xmltvtime.addMinuts(start, self.programs[assume]["duration"])
+                    programname = self.programs[self.last["title"]]["after"]
+                else:
+                    programname = self.last["title"]
+
+            # samaan aikaan tulevat ohjelmat        
+            if self.nearPaikka() is not None:
+                programname = self.nearPaikka()
+
+            # etsitään ohjelmaa seuraava aika, jolloin on paljon loppuvia ohjelmia
+            thisStart = xmltvtime.totalTime(self.current["start"])
+            bestduration=(0, 0)            
+            if self.current["channel"] in self.stops:
+                for duration in range(5, 65, 5):
+                    sametimestops=0
+                    for stop in self.stops[self.current["channel"]]:
+                        if (stop-(thisStart+duration)) % (24*60) == 0:
+                            if abs(stop - (thisStart+duration)) <= (24*60):
+                                sametimestops+=2
+                            else:
+                                sametimestops+=1
+                    if sametimestops > bestduration[1]:
+                        bestduration = (duration, sametimestops)
+                    if bestduration[1]>2:
+                        return xmltvtime.addMinuts(start, bestduration[0])
+
+            if programname is not None:
+                if "duration" in self.programs[programname]:
+                    return xmltvtime.addMinuts(start, self.programs[programname]["duration"])
             return xmltvtime.nextFullHour(start)
         
         case "title":
@@ -97,16 +124,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if element+"-da" in self.currentProgram():
                             return self.currentProgram()[element+"-da"]
                     return self.current[element]
-            paikka = self.nearPaikka()                
-            if paikka is not None:
-                assume=self.ohjelmapaikat[paikka]                    
-                if not self.durationConflict(self.programs[assume]):
-                    return assume
+            programname = self.nearPaikka()
+            if programname is not None:              
+                if not self.durationConflict(self.programs[programname]):
+                    return programname
             if element in self.last:                    
                 if "after" in self.programs[self.last["title"]]:
-                    assume = self.programs[self.last["title"]]["after"]
-                    if not self.durationConflict(self.programs[assume]):
-                        return assume
+                    programname = self.programs[self.last["title"]]["after"]
+                    if not self.durationConflict(self.programs[programname]):
+                        return programname
                     
             if element in self.last:
                 return self.last[element]
@@ -253,6 +279,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
             self.current[element] = content
             self.current["duration"] = xmltvtime.timeDistance(self.current["start"], content)
             assert self.current["duration"] >= 0
+            
+            if self.current["channel"] not in self.stops:
+                self.stops[self.current["channel"]] = []
+            self.stops[self.current["channel"]].append(xmltvtime.totalTime(content))
+
+            if "mtv3.fi" in self.current["channel"]:
+                # and "Violetta" in self.current["title"]:
+                lt.setInterval(self.current["start"], self.current["stop"])
+                lt.addProgram(self.current["start"][-12:-8], correct)
 
         case "title":
             if " (" in content:
@@ -297,10 +332,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
             #if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
             #if "sub.fi" in self.current["channel"] and "Salatut" in self.current["title"]:
-            if "1585.dvb.guide" in self.current["channel"]:
-                # and "Violetta" in self.current["title"]:
-                lt.setInterval(self.current["start"], self.current["stop"])
-                lt.addProgram(self.current["title"], correct)
+
 
         case "categoryn":
             self.currentProgram()[element] = content

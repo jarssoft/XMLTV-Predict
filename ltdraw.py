@@ -39,14 +39,22 @@ def addProgram(context, wd, start, stop, text, correct):
     start-=6*60
     stop-=6*60
     pat = cairo.LinearGradient(0.0, 0.0, 0.0, 1.0)
+
+
+    #pat.add_color_stop_rgba(1, 0.7, 0.7, 0.0, 1)  # First stop, 50% opacity
+    #pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
+    #context.rectangle(wd*100+margin, getY(start), 95, getY(stop-start-1)) 
+    #context.set_source(pat)
+    #context.fill()
+
     if correct:
         pat.add_color_stop_rgba(1, 0.7, 0.7, 0.7, 1)  # First stop, 50% opacity
         pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
     else:
-        pat.add_color_stop_rgba(1, 0.7, 0.7, 0.0, 1)  # First stop, 50% opacity
-        pat.add_color_stop_rgba(0, 0.9, 0.7, 0.2, 1)  # Last stop, 100% opacity
+        pat.add_color_stop_rgba(1, 1, 0.0, 0.0, 1)  # First stop, 50% opacity
+        pat.add_color_stop_rgba(0, 1, 0.0, 0.0, 1)  # Last stop, 100% opacity
 
-    context.rectangle(wd*100+margin, getY(start), 95, getY(stop-start-1)) 
+    context.rectangle(wd*100+margin, getY(stop), 95, getY(3)) 
     context.set_source(pat)
     context.fill()
 
@@ -54,7 +62,7 @@ def addProgram(context, wd, start, stop, text, correct):
     if(stop-start>=10):
         xbearing, ybearing, width, height, dx, dy = context.text_extents(text)
 
-        context.set_source_rgba(0, 0, 0, 1) 
+        context.set_source_rgba(1, 1, 1, 1) 
         context.select_font_face("Sans", cairo.FONT_SLANT_NORMAL)
         context.move_to(wd*100+margin, getY(start)+height)
         context.show_text(text)
