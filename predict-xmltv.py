@@ -50,8 +50,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
     def channelConflict(self, programname):
         program=self.programs[programname]        
-        chaconf = self.uniqueChannel() not in program["channels"]
-        return chaconf
+        return self.dayProfileName() not in program["channels"]
     
     duplicates={
         "1549.dvb.guide": "mtv3.fi",
@@ -153,7 +152,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             return programname2                                       
                     if not self.durationConflict(programname3):
                         return programname3
-                    
+
+                if programname1 is not None:
+                    if not self.channelConflict(programname1):
+                        return programname1                    
+                if programname2 is not None:              
+                    if not self.channelConflict(programname2):
+                        return programname2            
+                if programname3 is not None:              
+                    if not self.channelConflict(programname3):
+                        return programname3     
+                                    
                 if programname1 is not None:              
                     return programname1                    
                 if programname2 is not None:              
@@ -322,16 +331,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if content not in self.programs:
                     self.programs[content]={
                         "duration": self.current["duration"],
-                        "channels": [self.uniqueChannel()]
+                        "channels": [self.dayProfileName()]
                         }
+                    if "age" in self.current:
+                        self.programs[content]["age"] = self.current["age"]
                 else:
-                    self.programs[content]["channels"].append(self.uniqueChannel())
+                    #self.programs[content]["duration"]=self.current["duration"]
+                    self.programs[content]["channels"].append(self.dayProfileName())
                 self.ohjelmapaikat[self.currentPaikka()] = content
                 if element in self.last:
                     self.programs[self.last[element]]["after"]=content
             self.currentProgram()[element+"-"+lang] = content
-            if "age" in self.current:
-                self.currentProgram()["age"] = self.current["age"]
 
         case "sub-title":                
             if "episode" not in self.current:
