@@ -42,9 +42,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
     def ageMatch(self, current, episode):
         return "age" not in current or "age" in episode and current["age"] == episode["age"]
     
-    def durationConflict(self, program):
-        return "duration" in program and abs(program["duration"]-self.current["duration"]) > 15
+    def durationConflict(self, programname):
+        program=self.programs[programname]
+        durconf = abs(program["duration"] - self.current["duration"]) > 5
+        chaconf = False #self.uniqueChannel() not in program["channels"]
+        return durconf or chaconf
 
+    def channelConflict(self, programname):
+        program=self.programs[programname]        
+        chaconf = self.uniqueChannel() not in program["channels"]
+        return chaconf
+    
     duplicates={
         "1549.dvb.guide": "mtv3.fi",
         "1501.dvb.guide": "tv1.yle.fi",
@@ -112,6 +120,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
             return xmltvtime.nextFullHour(start)
         
         case "title":
+
+            # jos ohjelmalle on asetettu nimi jollakin kielellä
             if element in self.current:
                 if element+"-"+lang in self.currentProgram():
                     return self.currentProgram()[element+"-"+lang]
@@ -124,18 +134,32 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if element+"-da" in self.currentProgram():
                             return self.currentProgram()[element+"-da"]
                     return self.current[element]
-            programname = self.nearPaikka()
-            if programname is not None:              
-                if not self.durationConflict(self.programs[programname]):
-                    return programname
-            if element in self.last:                    
-                if "after" in self.programs[self.last["title"]]:
-                    programname = self.programs[self.last["title"]]["after"]
-                    if not self.durationConflict(self.programs[programname]):
-                        return programname
+            else:
+                # samaan aikaan tuleva ohjelma
+                programname1 = self.nearPaikka()
+                # ohjelmajärjestys edeltävän ohjelman perusteella
+                programname2 = None
+                # sama kuin viimeinen
+                programname3 = None
+
+                if programname1 is not None:              
+                    if not self.durationConflict(programname1):
+                        return programname1            
+                if element in self.last:                     
+                    programname3 = self.last[element]
+                    if "after" in self.programs[programname3]:                        
+                        programname2 = self.programs[programname3]["after"]
+                        if not self.durationConflict(programname2):
+                            return programname2                                       
+                    if not self.durationConflict(programname3):
+                        return programname3
                     
-            if element in self.last:
-                return self.last[element]
+                if programname1 is not None:              
+                    return programname1                    
+                if programname2 is not None:              
+                    return programname2            
+                if programname3 is not None:              
+                    return programname3       
             
         case "sub-title": 
             if element+"-"+lang in self.current:
@@ -296,7 +320,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
             if element not in self.current:
                 self.current[element]=content
                 if content not in self.programs:
-                    self.programs[content]={"duration": self.current["duration"]}
+                    self.programs[content]={
+                        "duration": self.current["duration"],
+                        "channels": [self.uniqueChannel()]
+                        }
+                else:
+                    self.programs[content]["channels"].append(self.uniqueChannel())
                 self.ohjelmapaikat[self.currentPaikka()] = content
                 if element in self.last:
                     self.programs[self.last[element]]["after"]=content
