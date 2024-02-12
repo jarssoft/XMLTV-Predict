@@ -49,7 +49,11 @@ class XMLTVPredicter(tester.XMLTVHandler):
         return durconf or chaconf
 
     def channelConflict(self, programname):
-        program=self.programs[programname]        
+        program=self.programs[programname]
+        #print()
+        #print(programname)
+        #print(self.dayProfileName())
+        #print(program["channels"])
         return self.dayProfileName() not in program["channels"]
     
     duplicates={
@@ -134,41 +138,44 @@ class XMLTVPredicter(tester.XMLTVHandler):
                             return self.currentProgram()[element+"-da"]
                     return self.current[element]
             else:
+                names=[]         
+
+                # Ohjelmilla on tietty "uusinta-intervalli"                
+                thisStart = xmltvtime.totalTime(self.current["start"])
+                for programname, p in self.programs.items():
+                    if not self.channelConflict(programname):
+                        if "reruns" in p:                        
+                            for episodeKey, episodeValue in p["episodes"].items():
+                                episodeStart = xmltvtime.totalTime(episodeValue["start"])
+                                if abs(episodeStart - thisStart) in p["reruns"]:
+                                    names=[programname]+names
+                                    break
+                                
                 # samaan aikaan tuleva ohjelma
                 programname1 = self.nearPaikka()
-                # ohjelmajärjestys edeltävän ohjelman perusteella
-                programname2 = None
-                # sama kuin viimeinen
-                programname3 = None
-
-                if programname1 is not None:              
-                    if not self.durationConflict(programname1):
-                        return programname1            
-                if element in self.last:                     
-                    programname3 = self.last[element]
-                    if "after" in self.programs[programname3]:                        
-                        programname2 = self.programs[programname3]["after"]
-                        if not self.durationConflict(programname2):
-                            return programname2                                       
-                    if not self.durationConflict(programname3):
-                        return programname3
-
                 if programname1 is not None:
-                    if not self.channelConflict(programname1):
-                        return programname1                    
-                if programname2 is not None:              
-                    if not self.channelConflict(programname2):
-                        return programname2            
-                if programname3 is not None:              
-                    if not self.channelConflict(programname3):
-                        return programname3     
-                                    
-                if programname1 is not None:              
-                    return programname1                    
-                if programname2 is not None:              
-                    return programname2            
-                if programname3 is not None:              
-                    return programname3       
+                    names.append(programname1)     
+                           
+                if element in self.last:
+                    # sama kuin viimeinen
+                    programname3 = self.last[element]                    
+                    if "after" in self.programs[programname3]:
+                        # ohjelmajärjestys edeltävän ohjelman perusteella                        
+                        programname2 = self.programs[programname3]["after"]
+                        names.append(programname2)
+                    names.append(programname3)                                                         
+                    
+                for name in names:       
+                    if not self.durationConflict(name):
+                        return name
+                    
+                for name in names:       
+                    if not self.channelConflict(name):
+                        return name
+
+                for p in self.programs:
+                    if not self.durationConflict(p):
+                        return p
             
         case "sub-title": 
             if element+"-"+lang in self.current:
@@ -335,13 +342,12 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         }
                     if "age" in self.current:
                         self.programs[content]["age"] = self.current["age"]
-                else:
-                    #self.programs[content]["duration"]=self.current["duration"]
-                    self.programs[content]["channels"].append(self.dayProfileName())
                 self.ohjelmapaikat[self.currentPaikka()] = content
                 if element in self.last:
                     self.programs[self.last[element]]["after"]=content
-            self.currentProgram()[element+"-"+lang] = content
+                if self.dayProfileName() not in self.currentProgram()["channels"]:
+                    self.currentProgram()["channels"].append(self.dayProfileName())
+            self.currentProgram()[element+"-"+lang] = content            
 
         case "sub-title":                
             if "episode" not in self.current:
@@ -371,7 +377,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
             #if "fox" in self.current["channel"] and "Simpsonit" in self.current["title"]:
             #if "sub.fi" in self.current["channel"] and "Salatut" in self.current["title"]:
-
 
         case "categoryn":
             self.currentProgram()[element] = content
