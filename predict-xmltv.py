@@ -140,16 +140,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
             else:
                 names=[]         
 
-                # Ohjelmilla on tietty "uusinta-intervalli"                
+                # Ohjelmilla on tietty "uusinta-intervalli"
+                """
                 thisStart = xmltvtime.totalTime(self.current["start"])
                 for programname, p in self.programs.items():
                     if not self.channelConflict(programname):
-                        if "reruns" in p:                        
+                        if "reruns" in p:
+                            reruns = p["reruns"]
                             for episodeKey, episodeValue in p["episodes"].items():
-                                episodeStart = xmltvtime.totalTime(episodeValue["start"])
-                                if abs(episodeStart - thisStart) in p["reruns"]:
+                                if abs(episodeValue["start"] - thisStart) in reruns:
                                     names=[programname]+names
-                                    break
+                                    break"""
                                 
                 # samaan aikaan tuleva ohjelma
                 programname1 = self.nearPaikka()
@@ -203,7 +204,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     # Jos samanniminen ohjelma tulee samaan aikaan päivästä, 
                     # jaksoero on yhtäkuin päiväero
                     for episodeKey, episodeValue in programEpisodes.items():
-                        episodeStart = xmltvtime.totalTime(episodeValue["start"])
+                        episodeStart = episodeValue["start"]
                         if ((episodeStart-thisStart) % (60*24)) == 0:
                             jakso = int((thisStart-episodeStart) / (60*24))
                             if episodeKey+jakso in programEpisodes.keys():
@@ -216,7 +217,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     # Ohjelmilla on usein tietty "uusinta-intervalli"
                     if "reruns" in self.currentProgram():                        
                         for episodeKey, episodeValue in programEpisodes.items():
-                            episodeStart = xmltvtime.totalTime(episodeValue["start"])
+                            episodeStart = episodeValue["start"]
                             if abs(episodeStart - thisStart) in self.currentProgram()["reruns"]:
                                 if self.ageMatch(self.current, programEpisodes[episodeKey]):
                                     episodehash=episodeKey
@@ -338,7 +339,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 if content not in self.programs:
                     self.programs[content]={
                         "duration": self.current["duration"],
-                        "channels": [self.dayProfileName()]
+                        "channels": [self.dayProfileName()],
+                        "starts":[]
                         }
                     if "age" in self.current:
                         self.programs[content]["age"] = self.current["age"]
@@ -359,14 +361,14 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 else:
                     thisStart=xmltvtime.totalTime(self.current["start"])
                     lastShow=self.currentProgram()["episodes"][episodehash]
-                    lastStart=xmltvtime.totalTime(lastShow["start"])
-                    rerunInterval = abs(thisStart - lastStart)                        
+                    rerunInterval = abs(thisStart - lastShow["start"])                        
                     if(rerunInterval>60):
                         if "reruns" not in self.currentProgram():
                             self.currentProgram()["reruns"]=[]
                         if rerunInterval not in self.currentProgram()["reruns"]:
                             self.currentProgram()["reruns"].append(rerunInterval)
-                self.currentProgram()["episodes"][episodehash]["start"] = self.current["start"]
+                self.currentProgram()["episodes"][episodehash]["start"] =  xmltvtime.totalTime(self.current["start"])
+                self.currentProgram()["starts"].append(xmltvtime.totalTime(self.current["start"]))
                 if "age" in self.current:
                     self.currentProgram()["episodes"][episodehash]["age"] = self.current["age"]
 
