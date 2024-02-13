@@ -435,5 +435,5 @@ predicter.setVerbose("-v" in sys.argv)
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
 #print(predicter.programs)
-#print(predicter.channelprogramnames)
+#print(predicter.tayte)
 lt.save()
