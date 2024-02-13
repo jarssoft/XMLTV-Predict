@@ -40,7 +40,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
         daytime = xmltvtime.dayTime(self.current["start"])
         for addminute in (0, 5, -5):
             key = prefix + ":" + str(daytime+addminute).zfill(4)
-            if key in self.ohjelmapaikat.keys():
+            if key in self.ohjelmapaikat:
                 return self.ohjelmapaikat[key]
         return None
 
@@ -58,22 +58,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
         #print(self.dayProfileName())
         #print(program["channels"])
         return self.dayProfileName() not in program["channels"]
-
-    def categoryConflict(self, programname):        
-        program=self.programs[programname]
-        if "categoryn" in program:
-            categoryn = program["categoryn"]
-            daytime=xmltvtime.dayTime(self.current["start"])
-            if categoryn[0] == '1' and (program["duration"]<15 or program["duration"]>120):
-                return True                       
-            if  ("Elokuva" in programname or "Leffa" in programname) and (program["duration"]<80 or program["duration"]>120):
-                return True                                   
-            #if (categoryn[0] == '2' or "Uutiset" in programname) and (program["duration"]>20 and "yle" in self.uniqueChannel()):
-            #    return True                
-            if categoryn[0] == '5' and (daytime > 19*60 or daytime < 5*60 or program["duration"]>120):
-                return True
-        return False
-        
+    
     duplicates={
         "1549.dvb.guide": "mtv3.fi",
         "1501.dvb.guide": "tv1.yle.fi",
@@ -185,23 +170,15 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         programname2 = self.programs[programname3]["after"]
                         names.append(programname2)
                     names.append(programname3)                                                         
-   
-                                        
+                    
                 for name in names:       
                     if not self.durationConflict(name):
                         return name
-
-
-                for name in names:       
-                    if not self.categoryConflict(name):
-                        return name                        
                     
                 for name in names:       
                     if not self.channelConflict(name):
                         return name
-                     
-            
-
+                
                 for p in self.programs:
                     if not self.durationConflict(p):
                         return p
@@ -435,5 +412,5 @@ predicter.setVerbose("-v" in sys.argv)
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
 #print(predicter.programs)
-#print(predicter.tayte)
+#print(predicter.channelprogramnames["mtv3.fi"])
 lt.save()
