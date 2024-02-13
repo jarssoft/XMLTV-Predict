@@ -17,6 +17,11 @@ class XMLTVPredicter(tester.XMLTVHandler):
     ohjelmapaikat={}
     rinnakkaisohjelmat={}
     stops={}
+    tayte={}
+    
+    def isTayte(self):
+        tayteraja=60*2
+        return self.current["duration"] > tayteraja
     
     def currentProgram(self):
         return self.programs[self.current['title']]
@@ -44,10 +49,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
     
     def durationConflict(self, programname):
         program=self.programs[programname]
-        durconf = abs(program["duration"] - self.current["duration"]) > 5
-        chaconf = False #self.uniqueChannel() not in program["channels"]
-        return durconf or chaconf
-
+        return abs(program["duration"] - self.current["duration"]) > 5
+    
     def channelConflict(self, programname):
         program=self.programs[programname]
         #print()
@@ -152,6 +155,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                                     names=[programname]+names
                                     break"""
                                 
+
+
                 # samaan aikaan tuleva ohjelma
                 programname1 = self.nearPaikka()
                 if programname1 is not None:
@@ -173,11 +178,16 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 for name in names:       
                     if not self.channelConflict(name):
                         return name
-
+                
                 for p in self.programs:
                     if not self.durationConflict(p):
                         return p
-            
+                    
+                if self.isTayte():                   
+                    if self.uniqueChannel() in self.tayte:
+                        return self.tayte[self.uniqueChannel()]
+                    return "Lähetystauko"
+                            
         case "sub-title": 
             if element+"-"+lang in self.current:
                 return self.current[element+"-"+lang]
@@ -349,6 +359,9 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     self.programs[self.last[element]]["after"]=content
                 if self.dayProfileName() not in self.currentProgram()["channels"]:
                     self.currentProgram()["channels"].append(self.dayProfileName())
+                # Joka kanavalla on täytteensä tai yöohjelmansa
+                if self.isTayte():
+                   self.tayte[self.uniqueChannel()] = content
             self.currentProgram()[element+"-"+lang] = content            
 
         case "sub-title":                
@@ -399,4 +412,5 @@ predicter.setVerbose("-v" in sys.argv)
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
 #print(predicter.programs)
+#print(predicter.tayte)
 lt.save()
