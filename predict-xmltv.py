@@ -18,6 +18,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
     rinnakkaisohjelmat={}
     stops={}
     tayte={}
+    channelprogramnames={}
     
     def isTayte(self):
         tayteraja=60*2
@@ -40,7 +41,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
         daytime = xmltvtime.dayTime(self.current["start"])
         for addminute in (0, 5, -5):
             key = prefix + ":" + str(daytime+addminute).zfill(4)
-            if key in self.ohjelmapaikat:
+            if key in self.ohjelmapaikat.keys():
                 return self.ohjelmapaikat[key]
         return None
 
@@ -53,12 +54,23 @@ class XMLTVPredicter(tester.XMLTVHandler):
     
     def channelConflict(self, programname):
         program=self.programs[programname]
-        #print()
-        #print(programname)
-        #print(self.dayProfileName())
-        #print(program["channels"])
         return self.dayProfileName() not in program["channels"]
-    
+
+    def categoryConflict(self, programname):        
+        program=self.programs[programname]
+        if "categoryn" in program:
+            categoryn = program["categoryn"]
+            daytime=xmltvtime.dayTime(self.current["start"])
+            if categoryn[0] == '1' and (program["duration"]<15 or program["duration"]>120):
+                return True                       
+            if  ("Elokuva" in programname or "Leffa" in programname) and (program["duration"]<80 or program["duration"]>120):
+                return True                                   
+            #if (categoryn[0] == '2' or "Uutiset" in programname) and (program["duration"]>20 and "yle" in self.uniqueChannel()):
+            #    return True                
+            if categoryn[0] == '5' and (daytime > 19*60 or daytime < 5*60 or program["duration"]>120):
+                return True
+        return False
+        
     duplicates={
         "1549.dvb.guide": "mtv3.fi",
         "1501.dvb.guide": "tv1.yle.fi",
@@ -143,19 +155,17 @@ class XMLTVPredicter(tester.XMLTVHandler):
             else:
                 names=[]         
 
-                # Ohjelmilla on tietty "uusinta-intervalli"
-                """
+                # Ohjelmilla on tietty "uusinta-intervalli" tai "toisto-intevalli"
                 thisStart = xmltvtime.totalTime(self.current["start"])
-                for programname, p in self.programs.items():
-                    if not self.channelConflict(programname):
+                for programname in self.channelprogramnames[self.uniqueChannel()]:
+                    if programname in self.programs:
+                        p=self.programs[programname]
                         if "reruns" in p:
                             reruns = p["reruns"]
                             for episodeKey, episodeValue in p["episodes"].items():
                                 if abs(episodeValue["start"] - thisStart) in reruns:
                                     names=[programname]+names
-                                    break"""
-                                
-
+                                    break                               
 
                 # samaan aikaan tuleva ohjelma
                 programname1 = self.nearPaikka()
@@ -170,15 +180,23 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         programname2 = self.programs[programname3]["after"]
                         names.append(programname2)
                     names.append(programname3)                                                         
-                    
+   
+                                        
                 for name in names:       
                     if not self.durationConflict(name):
                         return name
+
+
+                for name in names:       
+                    if not self.categoryConflict(name):
+                        return name                        
                     
                 for name in names:       
                     if not self.channelConflict(name):
                         return name
-                
+                     
+            
+
                 for p in self.programs:
                     if not self.durationConflict(p):
                         return p
@@ -305,6 +323,7 @@ class XMLTVPredicter(tester.XMLTVHandler):
 
       match element:
         case "channel":
+
             if element not in self.current or self.current[element] != content:
                 if element in self.current:
                     self.currentByChannel[self.current[element]]=self.current
@@ -318,6 +337,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                     key = self.uniqueChannel()+":"+self.current["start"]
                     self.rinnakkaisohjelmat[key] = self.current
             self.current={element:content}
+            if self.uniqueChannel() not in self.channelprogramnames:
+                self.channelprogramnames[self.uniqueChannel()]=[]            
 
         case "start":
             self.current[element]=content
@@ -362,6 +383,8 @@ class XMLTVPredicter(tester.XMLTVHandler):
                 # Joka kanavalla on täytteensä tai yöohjelmansa
                 if self.isTayte():
                    self.tayte[self.uniqueChannel()] = content
+                if content not in self.channelprogramnames[self.uniqueChannel()]:
+                    self.channelprogramnames[self.uniqueChannel()].append(content)
             self.currentProgram()[element+"-"+lang] = content            
 
         case "sub-title":                
@@ -381,7 +404,6 @@ class XMLTVPredicter(tester.XMLTVHandler):
                         if rerunInterval not in self.currentProgram()["reruns"]:
                             self.currentProgram()["reruns"].append(rerunInterval)
                 self.currentProgram()["episodes"][episodehash]["start"] =  xmltvtime.totalTime(self.current["start"])
-                self.currentProgram()["starts"].append(xmltvtime.totalTime(self.current["start"]))
                 if "age" in self.current:
                     self.currentProgram()["episodes"][episodehash]["age"] = self.current["age"]
 
@@ -412,5 +434,5 @@ predicter.setVerbose("-v" in sys.argv)
 file="/home/jari/media/lataukset/tvtiivis/ohjelmat-yle-2.xml"
 tester.test(predicter, open(file,"r"))
 #print(predicter.programs)
-#print(predicter.channelprogramnames)
+#print(predicter.channelprogramnames["mtv3.fi"])
 lt.save()
